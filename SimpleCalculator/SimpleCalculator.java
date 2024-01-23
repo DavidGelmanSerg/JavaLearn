@@ -1,7 +1,7 @@
-import java.util.*;
-public class SimpleCalculator{
-    public static void main(String[] args)
-    {
+import java.util.Scanner;
+
+public class SimpleCalculator {
+    public static void main(String[] args) {
         //Приветствие
         System.out.print("""
                 Здравствуйте.для расчета значений введите данные в формате:
@@ -11,7 +11,7 @@ public class SimpleCalculator{
         //Переменные
         double firstOperand;
         double secondOperand;
-        double operationResult=0;
+        double operationResult = 0;
         String operator;
 
         //Объект для чтения данных со стандартным системным потоком
@@ -36,24 +36,27 @@ public class SimpleCalculator{
                     break;
                 case ":":
                 case "/":
-                    operationResult = firstOperand / secondOperand;
-                    break;
+                    if (secondOperand != 0) {
+                        operationResult = firstOperand / secondOperand;
+                        break;
+                    } else {
+                        System.out.print("Division by zero is not permitted! The second operand is 0");
+                        System.exit(0);
+                    }
                 default:
                     System.out.print("""
                             Ввод данных не по формату.
                             Вводите данные в формате [операнд1] [оператор] [операнд2].
                             Операнд может быть: +, -, *, : или /. В качестве операндов принимаются любые числа
-                            Обращайте внимание на наличие пробелов между операторами и операндами"""
-                    );
+                            Обращайте внимание на наличие пробелов между операторами и операндами""");
             }
             System.out.printf("Результат операции: %.2f", operationResult);
         } catch (Exception e) {
             System.out.print("""
-                            Ввод данных не по формату.
-                            Вводите данные в формате [операнд1] [оператор] [операнд2].
-                            Операнд может быть: +, -, *, : или /. В качестве операндов принимаются любые числа
-                            Обращайте внимание на наличие пробелов между операторами и операндами"""
-            );
+                    Ввод данных не по формату.
+                    Вводите данные в формате [операнд1] [оператор] [операнд2].
+                    Операнд может быть: +, -, *, : или /. В качестве операндов принимаются любые числа
+                    Обращайте внимание на наличие пробелов между операторами и операндами""");
         }
     }
 }
