@@ -1,31 +1,28 @@
-import exceptions.ExpressionNotValidException;
-
-import java.io.*;
-import java.util.Scanner;
+import calculator.Calculator;
+import calculator.exceptions.DivisionByZeroException;
+import input.analyzer.exceptions.InvalidExpressionException;
+import input.parser.InputParser;
+import input.parser.exceptions.InvalidArgumentsException;
+import output.Output;
 
 public class Main {
 
     public static void main(String[] args) {
-        InputParser input = new InputParser(args);
-        Calculator calculator = new Calculator();
         try {
-            if (!input.getOptionValue("-e").isEmpty()) {
-                calculator.setExpression(input.getOptionValue("-e"));
-            } else {
-                System.out.print("Введите выражение: ");
-                Scanner in = new Scanner(System.in);
-                calculator.setExpression(in.nextLine().replace(" ", ""));
-            }
+            InputParser input = new InputParser(args);
+            Calculator calculator = new Calculator(input.getExpression());
 
-        } catch (ExpressionNotValidException e) {
-            System.out.println(e.getMessage());
+            Output output = new Output(input.getOutputStream());
+            output.print(calculator.calculate());
+        } catch (InvalidArgumentsException invalidArg) {
+            System.out.println("Отсутствует значение для аргумента: " + invalidArg.getMessage());
             System.exit(0);
-        }
-        try (PrintWriter out = new PrintWriter(input.getOptionValue("-f"))) {
-            out.print(calculator.calculate().toString());
-            System.out.println("Выражение записано");
-        } catch (FileNotFoundException e) {
-            System.out.println(calculator.calculate().toString());
+        } catch (InvalidExpressionException invalidExpr) {
+            System.out.println("Вы ввели неверное выражение!");
+            System.exit(0);
+        } catch (DivisionByZeroException ex) {
+            System.out.println("Деление на ноль запрещено!");
+            System.exit(0);
         }
     }
 }

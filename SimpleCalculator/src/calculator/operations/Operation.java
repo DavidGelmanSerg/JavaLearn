@@ -1,6 +1,9 @@
-package operations;
+package calculator.operations;
 
 public abstract class Operation {
+    protected double operand1;
+    protected double operand2;
+
     public Operation() {
     }
 
@@ -13,5 +16,9 @@ public abstract class Operation {
         };
     }
 
-    public abstract double compute(double[] args);
+    public abstract double compute();
+
+    public abstract void setOperand1(double operand);
+
+    public abstract void setOperand2(double operand);
 }
