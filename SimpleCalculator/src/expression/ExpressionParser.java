@@ -3,14 +3,11 @@ package expression;
 import expression.exceptions.EmptyExpressionException;
 import expression.exceptions.UnexpectedTokenException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
-import java.util.StringTokenizer;
+import java.util.*;
 
 
 public class ExpressionParser {
-    private static final String SEPARATORS = "*+-/";
+    private static final Set<String> SEPARATORS = Operations.asSet();
 
     private final String expression;
 
@@ -22,7 +19,7 @@ public class ExpressionParser {
     }
 
     public List<String> getTokens() {
-        StringTokenizer tokenizer = new StringTokenizer(expression, SEPARATORS, true);
+        StringTokenizer tokenizer = new StringTokenizer(expression, SEPARATORS.toString(), true);
         List<String> tokens = new ArrayList<>();
 
         while (tokenizer.hasMoreTokens()) {
@@ -39,22 +36,22 @@ public class ExpressionParser {
 
     public List<String> getPostfixForm() {
         List<String> postfixForm = new ArrayList<>();
-        Stack<String> opertationStack = new Stack<>();
+        Deque<String> operationStack = new ArrayDeque<>();
         List<String> tokens = getTokens();
 
         for (String token : tokens) {
             if (NumberUtils.isNumber(token)) {
                 postfixForm.add(token);
             } else if (SEPARATORS.contains(token)) {
-                while (!opertationStack.isEmpty() && getOperationPriority(opertationStack.peek()) >= getOperationPriority(token)) {
-                    postfixForm.add(opertationStack.pop());
+                while (!operationStack.isEmpty() && getOperationPriority(operationStack.peek()) >= getOperationPriority(token)) {
+                    postfixForm.add(operationStack.pop());
                 }
-                opertationStack.push(token);
+                operationStack.push(token);
             }
         }
 
-        while (!opertationStack.isEmpty()) {
-            postfixForm.add(opertationStack.pop());
+        while (!operationStack.isEmpty()) {
+            postfixForm.add(operationStack.pop());
         }
 
         return postfixForm;
@@ -62,10 +59,10 @@ public class ExpressionParser {
 
     private int getOperationPriority(String operationToken) {
         switch (operationToken) {
-            case "+", "-" -> {
+            case Operations.SUM, Operations.SUBTRACTION -> {
                 return 1;
             }
-            case "*", "/", ":" -> {
+            case Operations.MULTIPLICATION, Operations.DIVISION -> {
                 return 2;
             }
             default -> throw new UnsupportedOperationException("Данная операция не поддерживается: " + operationToken);

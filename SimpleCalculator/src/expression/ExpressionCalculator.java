@@ -4,6 +4,7 @@ import expression.exceptions.InvalidExpressionException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Stack;
 
@@ -15,14 +16,21 @@ public class ExpressionCalculator {
             if (NumberUtils.isNumber(token)) {
                 operands.push(new BigDecimal(token));
             } else {
-                BigDecimal second = operands.pop();
-                BigDecimal first = operands.pop();
-                switch (token) {
-                    case "+" -> operands.push(first.add(second));
-                    case "-" -> operands.push(first.subtract(second));
-                    case "*" -> operands.push(first.multiply(second));
-                    case "/" -> operands.push(first.divide(second, RoundingMode.DOWN));
-                    default -> throw new UnsupportedOperationException("Данная операция не поддерживается: " + token);
+                try
+                {
+                    BigDecimal second = operands.pop();
+                    BigDecimal first = operands.pop();
+
+                    switch (token) {
+                        case "+" -> operands.push(first.add(second));
+                        case "-" -> operands.push(first.subtract(second));
+                        case "*" -> operands.push(first.multiply(second));
+                        case "/" -> operands.push(first.divide(second,2, RoundingMode.DOWN));
+                        default -> throw new UnsupportedOperationException("Данная операция не поддерживается: " + token);
+                    }
+                }catch (EmptyStackException e)
+                {
+                    throw new InvalidExpressionException("Выражение введено неверно");
                 }
             }
         }

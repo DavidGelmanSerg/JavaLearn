@@ -1,5 +1,7 @@
 package output.printers;
 
+import output.printers.exceptions.WritingFileFailureException;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,13 +25,9 @@ public class FilePrinter implements OutputPrinter {
                 writer.write(value);
             }
         } catch (IOException e) {
-            //Я не понимаю, как правильно обрабатывать подобные исключения в случае реализации интерфейсов.
-            /*
-                 Метод в моем интерфейсе не выбрасывает подобное исключение, но при попытке записи в файл или
-                 его создании я должен их обрабатывать. Как Правильно работать с этими исключениями внутри классов?
-             */
-            ConsolePrinter printer = new ConsolePrinter();
-            printer.print("Не удалось выполнить запись в файл");
+            var ex = new WritingFileFailureException("Не удалось записать данные в файл");
+            ex.initCause(e);
+            throw ex;
         }
     }
 }
