@@ -1,7 +1,7 @@
 package expression;
 
-import expression.exceptions.EmptyExpressionException;
-import expression.exceptions.UnexpectedTokenException;
+import exceptions.UnexpectedTokenException;
+import exceptions.expression.EmptyExpressionException;
 
 import java.util.*;
 

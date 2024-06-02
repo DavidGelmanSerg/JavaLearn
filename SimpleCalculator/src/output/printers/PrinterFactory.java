@@ -1,28 +1,26 @@
 package output.printers;
 
-import output.printers.exceptions.UnsupportedPrinterException;
+import output.printers.console.ConsolePrinter;
+import output.printers.console.PrintStreamFactory;
+import output.target.TargetType;
+import output.target.ui.CalculatorFrame;
 
-import javax.swing.text.JTextComponent;
+import java.io.File;
 import java.io.PrintStream;
 
 public class PrinterFactory {
-    public static final String UI = "-u";
-    public static final String CONSOLE = "-c";
-    public static final String FILE = "-f";
+    public static OutputPrinter getDefaultPrinter() {
+        return new ConsolePrinter(PrintStreamFactory.getDefaultPrintStream());
+    }
 
-    public static OutputPrinter getPrinter(String printerType, Object option) {
-        switch (printerType) {
-            case FILE -> {
-                return new FilePrinter(String.valueOf(option));
-            }
-            case CONSOLE -> {
-                return new ConsolePrinter((PrintStream) option);
-            }
-            case UI -> {
-                return new JTextComponentPrinter((JTextComponent) option);
-            }
-            default -> throw new UnsupportedPrinterException("Неизвестный тип принтера: " + printerType);
-        }
+    public static OutputPrinter getPrinter(TargetType targetType, Object option) {
+        return switch (targetType) {
+            case FILE -> new FilePrinter((File) option);
+            case CONSOLE -> new ConsolePrinter((PrintStream) option);
+            case UI -> new CalculatorFramePrinter((CalculatorFrame) option);
+        };
     }
 }
+
+//Исправить FilePrinter
 

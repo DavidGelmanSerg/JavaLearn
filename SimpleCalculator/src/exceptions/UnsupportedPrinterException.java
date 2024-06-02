@@ -1,4 +1,4 @@
-package output.printers.exceptions;
+package exceptions;
 
 public class UnsupportedPrinterException extends IllegalArgumentException {
     public UnsupportedPrinterException(String message) {

@@ -1,23 +1,23 @@
 package output.printers;
 
-import output.printers.exceptions.WritingFileFailureException;
+import exceptions.WritingFileFailureException;
+import exceptions.expression.EmptyExpressionException;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class FilePrinter implements OutputPrinter {
-    private final String filePath;
+    private final File file;
 
-    public FilePrinter(String filePath) {
-        this.filePath = filePath;
+    public FilePrinter(File file) {
+        this.file = file;
     }
 
-    public String getFilePath() {
-        return filePath;
-    }
     public void print(String value) {
-        File file = new File(filePath);
+        if (value.isEmpty()) {
+            throw new EmptyExpressionException("Попытка записать в файл пустое значение");
+        }
         try (FileWriter writer = new FileWriter(file)) {
             if (!file.exists() && file.createNewFile()) {
                 writer.write(value);

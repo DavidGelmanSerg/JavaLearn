@@ -1,4 +1,4 @@
-package input.parser;
+import exceptions.InvalidArgumentException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +36,15 @@ public class InputParser {
 
     public boolean hasOption(String key) {
         return options.containsKey(key);
+    }
+
+    public String getFirstOfKeys(String[] keys) {
+        for (String key : keys) {
+            if (hasOption(key)) {
+                return key;
+            }
+        }
+        return null;
     }
 
     @Override
