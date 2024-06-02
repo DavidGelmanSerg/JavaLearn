@@ -5,11 +5,6 @@ import output.target.Target;
 public class ExpressionException extends IllegalArgumentException {
     private Target source;
 
-    public ExpressionException(String message, Target source) {
-        super(message);
-        this.source = source;
-    }
-
     public ExpressionException(String message) {
         super(message);
     }

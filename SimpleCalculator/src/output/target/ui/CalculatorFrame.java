@@ -1,12 +1,10 @@
 package output.target.ui;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 
 public abstract class CalculatorFrame extends JFrame {
-    private JTextArea expressionField;
 
     public CalculatorFrame(int width, int height) {
         setSize(width, height);
@@ -16,8 +14,6 @@ public abstract class CalculatorFrame extends JFrame {
         int yLocation = (screenSize.height - getHeight()) / 2;
         setLocation(xLocation, yLocation);
     }
-
-    public abstract JTextComponent getExpressionField();
 
     public abstract void setExpression(String expression);
 

@@ -1,7 +1,6 @@
 package output.target.ui;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -86,11 +85,6 @@ public class SimpleCalculatorFrame extends CalculatorFrame {
 
         add(mainPanel, BorderLayout.CENTER);
         setVisible(true);
-    }
-
-    @Override
-    public JTextComponent getExpressionField() {
-        return this.expressionField;
     }
 
     @Override
