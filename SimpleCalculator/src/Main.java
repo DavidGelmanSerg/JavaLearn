@@ -1,67 +1,22 @@
-import exceptions.InvalidArgumentException;
-import exceptions.UnsupportedTargetException;
-import exceptions.expression.EmptyExpressionException;
-import exceptions.expression.InvalidExpressionException;
-import expression.ExpressionCalculator;
-import expression.ExpressionParser;
-import output.printers.OutputPrinter;
-import output.printers.PrinterFactory;
-import output.target.Target;
-import output.target.TargetFactory;
-import output.target.TargetType;
-
-import java.util.Scanner;
+import controller.SapperController;
+import controller.SapperControllerFactory;
+import controller.SapperType;
+import model.SapperModel;
+import view.ui.SapperGameFrame;
 
 public class Main {
-
     public static void main(String[] args) {
-        try {
-            InputParser parser = new InputParser(args);
-            String expression = parser.getOptionValue("-e");
+        SapperModel model = new SapperModel();
+        SapperGameFrame view = new SapperGameFrame(600, 600);
+        model.addPropertyChangeListener(view);
 
-            String[] keys = TargetFactory.getTypesAsStringArray();
-            String foundedType = parser.getFirstOfKeys(keys);
-            TargetType type = TargetFactory.getType(foundedType);
-            Target target = TargetFactory.getTarget(type, parser.getOptionValue(foundedType));
+        SapperController controller = SapperControllerFactory.getSapperController(SapperType.CLASSIC);
+        controller.setModel(model);
+        view.setController(controller);
 
-            if (!expression.isEmpty()) {
-                ExpressionParser expressionParser = new ExpressionParser(expression);
-                expression = ExpressionCalculator.calculate(expressionParser.getPostfixForm()).toString();
-            }
-            target.setExpression(expression);
-
-            target.addPropertyChangeListener("expression", evt -> {
-                String newValue = evt.getNewValue().toString();
-                String oldValue = evt.getOldValue().toString();
-                if (newValue.equals(oldValue)) {
-                    ExpressionParser expressionParser = new ExpressionParser(newValue);
-                    newValue = ExpressionCalculator.calculate(expressionParser.getPostfixForm()).toString();
-                }
-                target.setExpression(newValue);
-            });
-        } catch (InvalidArgumentException | InvalidExpressionException e) {
-            OutputPrinter printer = PrinterFactory.getDefaultPrinter();
-            printer.print(e.getMessage());
-        } catch (EmptyExpressionException ex) {
-            Target t = ex.getSource();
-            OutputPrinter printer = PrinterFactory.getDefaultPrinter();
-
-            printer.print("Введите выражение: ");
-            Scanner in = new Scanner(System.in);
-
-            ExpressionParser parser = new ExpressionParser(in.nextLine());
-            String result = ExpressionCalculator.calculate(parser.getPostfixForm()).toString();
-            t.setExpression(result);
-        } catch (UnsupportedTargetException ex) {
-            OutputPrinter printer = PrinterFactory.getDefaultPrinter();
-
-            printer.print("Введите выражение: ");
-            Scanner in = new Scanner(System.in);
-
-            ExpressionParser parser = new ExpressionParser(in.nextLine());
-            String result = ExpressionCalculator.calculate(parser.getPostfixForm()).toString();
-            printer.print(result);
-        }
+        model.start();
     }
 }
+
+
 
