@@ -1,7 +1,7 @@
-package view.ui.field;
+package view.ui;
 
-import common.CellData;
 import common.CellState;
+import common.dto.CellData;
 
 import javax.swing.*;
 import java.awt.*;

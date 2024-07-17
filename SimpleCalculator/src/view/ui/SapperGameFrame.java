@@ -1,9 +1,8 @@
 package view.ui;
 
-import common.CellData;
 import common.SapperEventType;
+import common.dto.CellData;
 import controller.SapperController;
-import view.ui.field.FieldPanel;
 
 import javax.swing.*;
 import java.awt.*;

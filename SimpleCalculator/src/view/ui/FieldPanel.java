@@ -1,6 +1,6 @@
-package view.ui.field;
+package view.ui;
 
-import common.CellData;
+import common.dto.CellData;
 import controller.SapperController;
 
 import javax.swing.*;
