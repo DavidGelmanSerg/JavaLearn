@@ -1,7 +1,7 @@
 package model.field;
 
-import common.CellData;
 import common.CellState;
+import common.dto.CellData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class SapperField {
     private final int side;
-    private final FieldCell[][] cells;
+    private final List<FieldCell> cells;
+
     private final int bombs;
     private int flags;
 
@@ -20,21 +21,21 @@ public class SapperField {
         this.bombs = bombs;
         this.flags = bombs;
 
-        cells = new FieldCell[side][side];
+        cells = new ArrayList<>(side);
 
         for (int i = 0; i < side; i++) {
             for (int j = 0; j < side; j++) {
-                cells[i][j] = new FieldCell(i, j);
+                cells.add(new FieldCell(i, j));
             }
         }
     }
 
-    public CellData[] open(int x, int y) {
+    public List<CellData> open(int x, int y) {
         checkCoordinates(x, y);
-        var cell = cells[x][y];
+        var cell = getCell(x, y);
 
         if (cell.isOpened() || cell.isMarked()) {
-            return new CellData[0];
+            return null;
         }
 
         List<CellData> openedCells = new ArrayList<>();
@@ -46,18 +47,18 @@ public class SapperField {
             var currentCell = toOpen.poll();
 
             currentCell.setState(CellState.OPENED);
-            openedCells.add(getCellData(currentCell));
+            openedCells.add(currentCell.getCellData());
 
             if (!currentCell.hasBombsAround() && !currentCell.hasBomb()) {
                 toOpen.addAll(getClosedCellsAround(currentCell));
             }
         }
-        return openedCells.toArray(new CellData[0]);
+        return openedCells;
     }
 
     public void mark(int x, int y) {
         checkCoordinates(x, y);
-        var cell = cells[x][y];
+        var cell = getCell(x, y);
 
         if (cell.isClosed()) {
             cell.setState(CellState.MARKED);
@@ -74,27 +75,26 @@ public class SapperField {
 
     public CellData getCellData(int x, int y) {
         checkCoordinates(x, y);
-        return getCellData(cells[x][y]);
+        FieldCell cell = getCell(x, y);
+        return cell.getCellData();
     }
 
-    public CellData[] getCellsWhenLoose(int x, int y) {
+    public List<CellData> getCellsWhenLoose(int x, int y) {
         checkCoordinates(x, y);
         List<CellData> cellsWithBombs = new ArrayList<>();
 
-        var looseCell = cells[x][y];
+        FieldCell looseCell = getCell(x, y);
         looseCell.setState(CellState.SHOW_BOMB);
-        cellsWithBombs.add(getCellData(looseCell));
+        cellsWithBombs.add(looseCell.getCellData());
 
-        for (FieldCell[] cellRow : cells) {
-            for (FieldCell cell : cellRow) {
-                if (cell.hasBomb()) {
-                    cell.setState(CellState.SHOW_BOMB);
-                    cellsWithBombs.add(getCellData(cell));
-                }
+        for (FieldCell cell : cells) {
+            if (cell.hasBomb()) {
+                cell.setState(CellState.SHOW_BOMB);
+                cellsWithBombs.add(cell.getCellData());
             }
         }
 
-        return cellsWithBombs.toArray(new CellData[0]);
+        return cellsWithBombs;
     }
 
     public int getSide() {
@@ -102,52 +102,55 @@ public class SapperField {
     }
 
     public void setBombs(int x, int y) {
-        checkCoordinates(x, y);
+        List<FieldCell> cellsRegister = new ArrayList<>(List.copyOf(cells));
+        cellsRegister.remove(getCell(x, y));
+
         Random random = new Random();
+        for (int i = 0; i < bombs; i++) {
+            FieldCell cellFromRegister = cellsRegister.get(random.nextInt(cellsRegister.size()));
+            FieldCell cellToSetBomb = getCell(cellFromRegister.getRow(), cellFromRegister.getColumn());
 
-        var cell = cells[x][y];
-        int bombsCount = 0;
-        List<FieldCell> cellsWithBombs = new ArrayList<>();
-        while (bombsCount != bombs) {
-            int row = random.nextInt(0, side);
-            int column = random.nextInt(0, side);
+            cellToSetBomb.setBomb();
+            cellsRegister.remove(cellFromRegister);
 
-            FieldCell randomCell = cells[row][column];
-
-            if (!randomCell.equals(cell) && !cellsWithBombs.contains(randomCell)) {
-                randomCell.setBomb();
-                cellsWithBombs.add(randomCell);
-
-                List<FieldCell> cellsAround = getCellsAround(randomCell);
-                for (FieldCell c : cellsAround) {
-                    c.incrementBombsAround();
-                }
-                bombsCount++;
+            List<FieldCell> cellsAround = getCellsAround(cellToSetBomb);
+            for (FieldCell c : cellsAround) {
+                c.incrementBombsAround();
             }
         }
     }
 
-    public boolean isWin() {
-        int openedCellsAmount = 0;
-        for (FieldCell[] cellRow : cells) {
-            for (FieldCell cell : cellRow) {
-                if (cell.isOpened()) {
-                    openedCellsAmount++;
-                }
+    private FieldCell getCell(int x, int y) {
+        for (FieldCell cell : cells) {
+            if (cell.equalsCoordinates(x, y)) {
+                return cell;
             }
         }
+        throw new NullPointerException("No cell was found with coordinates: [" + x + ", " + y + "]");
+    }
+
+    public boolean isWin() {
+        int openedCellsAmount = 0;
+        for (FieldCell cell : cells) {
+            if (cell.isOpened()) {
+                openedCellsAmount++;
+            }
+        }
+
         int cellsAmountExceptBombs = (side * side) - bombs;
         return (openedCellsAmount == cellsAmountExceptBombs);
     }
 
     public boolean isBomb(int x, int y) {
         checkCoordinates(x, y);
-        return cells[x][y].hasBomb();
+        FieldCell cell = getCell(x, y);
+        return cell.hasBomb();
     }
 
     public boolean isMarked(int x, int y) {
         checkCoordinates(x, y);
-        return cells[x][y].isMarked();
+        FieldCell cell = getCell(x, y);
+        return cell.isMarked();
     }
 
     private List<FieldCell> getCellsAround(FieldCell cell) {
@@ -164,7 +167,7 @@ public class SapperField {
                 int verticalOffset = cell.getColumn() - j;
 
                 if (isInsideField(horizontalOffset, verticalOffset)) {
-                    FieldCell currentCell = cells[horizontalOffset][verticalOffset];
+                    FieldCell currentCell = getCell(horizontalOffset, verticalOffset);
 
                     if (!currentCell.equals(cell)) {
                         cellsAround.add(currentCell);
@@ -190,7 +193,7 @@ public class SapperField {
                 int verticalOffset = cell.getColumn() - j;
 
                 if (isInsideField(horizontalOffset, verticalOffset)) {
-                    FieldCell currentCell = cells[horizontalOffset][verticalOffset];
+                    FieldCell currentCell = getCell(horizontalOffset, verticalOffset);
 
                     if (!currentCell.equals(cell) && currentCell.isClosed()) {
                         cellsAround.add(currentCell);
@@ -202,23 +205,13 @@ public class SapperField {
         return cellsAround;
     }
 
-    private CellData getCellData(FieldCell cell) {
-        int row = cell.getRow();
-        int col = cell.getColumn();
-        int bombsAround = cell.getBombsAround();
-        CellState state = cell.getState();
-
-        return new CellData(row, col, bombsAround, state);
-    }
-
     private boolean isInsideField(int x, int y) {
         return x >= 0 && x < side && y >= 0 && y < side;
     }
 
-    public void checkCoordinates(int x, int y) {
+    private void checkCoordinates(int x, int y) {
         if (!isInsideField(x, y)) {
-            var cell = cells[x][y];
-            throw new IndexOutOfBoundsException("Incorrect coordinates of cell " + cell + " in field of size" + side + "x" + side);
+            throw new IndexOutOfBoundsException("Incorrect coordinates [" + x + "," + y + "] in field of size" + side + "x" + side);
         }
     }
 }

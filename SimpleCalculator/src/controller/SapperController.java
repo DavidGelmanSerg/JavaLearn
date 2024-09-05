@@ -3,21 +3,30 @@ package controller;
 import common.SapperDifficulty;
 import model.SapperModel;
 
-public abstract class SapperController {
-    protected SapperModel model;
+public class SapperController {
+    private SapperModel model;
 
-    public SapperController() {
+    public SapperController(SapperModel model) {
+        this.model = model;
     }
 
     public void setModel(SapperModel model) {
         this.model = model;
     }
 
-    public abstract void startNewGame(SapperDifficulty difficulty);
+    public void openCell(int x, int y) {
+        model.openCell(x, y);
+    }
 
-    public abstract void restartGame();
+    public void markCell(int x, int y) {
+        model.markCell(x, y);
+    }
 
-    public abstract void openCell(int x, int y);
-
-    public abstract void markCell(int x, int y);
+    public void startNewGame(SapperDifficulty difficulty) {
+        if (difficulty == SapperDifficulty.CURRENT) {
+            model.restart();
+        } else {
+            model.start(difficulty);
+        }
+    }
 }

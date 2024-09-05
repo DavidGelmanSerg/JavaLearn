@@ -1,4 +1,4 @@
-package common;
+package common.observer.events;
 
 public enum SapperEventType {
     START,

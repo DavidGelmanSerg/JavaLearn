@@ -1,6 +1,4 @@
 import controller.SapperController;
-import controller.SapperControllerFactory;
-import controller.SapperType;
 import model.SapperModel;
 import view.ui.SapperGameFrame;
 
@@ -8,9 +6,9 @@ public class Main {
     public static void main(String[] args) {
         SapperModel model = new SapperModel();
         SapperGameFrame view = new SapperGameFrame(600, 600);
-        model.addPropertyChangeListener(view);
+        model.addSapperListener(view);
 
-        SapperController controller = SapperControllerFactory.getSapperController(SapperType.CLASSIC);
+        SapperController controller = new SapperController(model);
         controller.setModel(model);
         view.setController(controller);
 

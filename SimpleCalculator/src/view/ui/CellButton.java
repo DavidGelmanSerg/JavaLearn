@@ -9,8 +9,12 @@ import java.util.Objects;
 
 public class CellButton extends JButton {
     private CellState previousState;
+    private final int row;
+    private final int col;
 
-    public CellButton() {
+    public CellButton(int row, int col) {
+        this.row = row;
+        this.col = col;
         previousState = CellState.CLOSED;
         setBackground(Color.WHITE);
         setFont(new Font("Sans Serif", Font.BOLD, 24));
@@ -30,16 +34,33 @@ public class CellButton extends JButton {
                 setBackground(Color.LIGHT_GRAY);
             }
             case MARKED -> {
-                ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("pictures/flag.png")));
+                ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/flag.png")));
                 setIcon(img);
             }
             case SHOW_BOMB -> {
-                if (!previousState.equals(CellState.MARKED)) {
-                    ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("pictures/mine.png")));
+                if (previousState != CellState.MARKED) {
+                    ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/mine.png")));
                     setIcon(img);
                 }
             }
         }
         previousState = state;
+    }
+
+    public boolean equalsByCoordinates(int x, int y) {
+        return row == x && col == y;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CellButton button = (CellButton) o;
+        return row == button.row && col == button.col;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(row, col);
     }
 }

@@ -1,32 +1,36 @@
 package model;
 
-import common.CellData;
 import common.SapperDifficulty;
-import common.SapperEventType;
+import common.dto.CellData;
+import common.observer.SapperListener;
+import common.observer.SapperObserver;
+import common.observer.events.SapperEvent;
+import common.observer.events.SapperEventFactory;
 import model.field.SapperField;
 import model.field.SapperFieldFactory;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
+import java.util.List;
 
-public class SapperModel {
-    private final PropertyChangeSupport support;
+public class SapperModel implements SapperObserver {
+    private final List<SapperListener> listeners;
+    private final SapperEventFactory eventFactory;
     private SapperDifficulty difficulty;
     private SapperGameStatus status;
     private SapperField field;
 
     public SapperModel() {
-        support = new PropertyChangeSupport(this);
-        difficulty = SapperDifficulty.BEGINNER_DIFFICULTY;
+        listeners = new ArrayList<>();
+        eventFactory = new SapperEventFactory();
+        difficulty = SapperDifficulty.BEGINNER;
         setStatus(SapperGameStatus.NOT_STARTED);
         field = SapperFieldFactory.getField(difficulty);
     }
 
     public void start() {
         setStatus(SapperGameStatus.STARTED);
-        firePropertyChange(SapperEventType.START, field.getSide());
-        firePropertyChange(SapperEventType.FLAGS_CHANGED, field.getFlags());
+        notifyListeners(eventFactory.getStartEvent(field.getSide()));
+        notifyListeners(eventFactory.getFlagsChangedEvent(field.getFlags()));
     }
 
     public void start(SapperDifficulty difficulty) {
@@ -48,26 +52,28 @@ public class SapperModel {
 
         if (field.isBomb(x, y) && !field.isMarked(x, y)) {
             setStatus(SapperGameStatus.LOOSE);
-            firePropertyChange(SapperEventType.LOOSE, field.getCellsWhenLoose(x, y));
+            notifyListeners(eventFactory.getLooseEvent(field.getCellsWhenLoose(x, y)));
+            //notifyListeners(new SapperEvent(SapperEventType.LOOSE, field.getCellsWhenLoose(x, y)));
             return;
         }
 
-        CellData[] openedCells = field.open(x, y);
-        if (openedCells.length > 0) {
-            firePropertyChange(SapperEventType.CELLS_CHANGED, openedCells);
-
+        List<CellData> openedCells = field.open(x, y);
+        if (openedCells != null) {
+            notifyListeners(eventFactory.getCellsChangedEvent(openedCells));
             if (field.isWin()) {
                 setStatus(SapperGameStatus.WIN);
-                fireWin();
+                notifyListeners(eventFactory.getWinEvent());
             }
         }
     }
 
     public void markCell(int x, int y) {
         field.mark(x, y);
-        CellData[] cellData = {field.getCellData(x, y)};
-        firePropertyChange(SapperEventType.CELLS_CHANGED, cellData);
-        firePropertyChange(SapperEventType.FLAGS_CHANGED, field.getFlags());
+        List<CellData> cellData = new ArrayList<>();
+        cellData.add(field.getCellData(x, y));
+
+        notifyListeners(eventFactory.getCellsChangedEvent(cellData));
+        notifyListeners(eventFactory.getFlagsChangedEvent(field.getFlags()));
     }
 
     private void setStatus(SapperGameStatus status) {
@@ -75,18 +81,28 @@ public class SapperModel {
     }
 
     private boolean isStarted() {
-        return status.equals(SapperGameStatus.STARTED);
+        return status == SapperGameStatus.STARTED;
     }
 
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        support.addPropertyChangeListener(listener);
+    @Override
+    public void addSapperListener(SapperListener listener) {
+        listeners.add(listener);
     }
 
-    private void firePropertyChange(Object oldValue, Object newValue) {
-        support.firePropertyChange(new PropertyChangeEvent(this, "", oldValue, newValue));
+    @Override
+    public void removeSapperListener(SapperListener listener) {
+        listeners.remove(listener);
     }
 
-    private void fireWin() {
-        support.firePropertyChange(new PropertyChangeEvent(this, "", SapperEventType.WIN, null));
+    @Override
+    public void clearListenerList() {
+        listeners.clear();
+    }
+
+    @Override
+    public void notifyListeners(SapperEvent event) {
+        for (SapperListener l : listeners) {
+            l.update(event);
+        }
     }
 }

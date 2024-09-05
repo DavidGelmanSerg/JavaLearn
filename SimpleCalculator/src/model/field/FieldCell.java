@@ -1,6 +1,7 @@
 package model.field;
 
 import common.CellState;
+import common.dto.CellData;
 
 public class FieldCell {
     private final int row;
@@ -33,9 +34,6 @@ public class FieldCell {
         hasBomb = true;
     }
 
-    public int getBombsAround() {
-        return bombsAround;
-    }
 
     public boolean hasBombsAround() {
         return bombsAround > 0;
@@ -45,8 +43,8 @@ public class FieldCell {
         bombsAround++;
     }
 
-    public CellState getState() {
-        return state;
+    public CellData getCellData() {
+        return new CellData(row, column, bombsAround, state);
     }
 
     public void setState(CellState state) {
@@ -54,15 +52,15 @@ public class FieldCell {
     }
 
     public boolean isClosed() {
-        return state.equals(CellState.CLOSED);
+        return state == CellState.CLOSED;
     }
 
     public boolean isOpened() {
-        return state.equals(CellState.OPENED);
+        return state == CellState.OPENED;
     }
 
     public boolean isMarked() {
-        return state.equals(CellState.MARKED);
+        return state == CellState.MARKED;
     }
 
     @Override
@@ -71,6 +69,10 @@ public class FieldCell {
         if (o == null || getClass() != o.getClass()) return false;
         FieldCell cell = (FieldCell) o;
         return row == cell.row && column == cell.column;
+    }
+
+    public boolean equalsCoordinates(int x, int y) {
+        return row == x && column == y;
     }
 
     @Override

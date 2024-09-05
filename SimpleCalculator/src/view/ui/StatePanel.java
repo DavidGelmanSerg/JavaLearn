@@ -1,8 +1,15 @@
 package view.ui;
 
+import common.SapperDifficulty;
+import view.bus.SapperViewEventBus;
+import view.bus.event.SapperViewEventType;
+import view.bus.event.StartGameEvent;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Objects;
 
 public class StatePanel extends JPanel {
@@ -16,9 +23,15 @@ public class StatePanel extends JPanel {
         flags.setPreferredSize(new Dimension(50, 50));
         flags.setBorder(new LineBorder(Color.BLACK, 1));
 
-        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("pictures/start smile.png")));
+        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/start smile.png")));
         stateSmile = new JLabel(img, SwingConstants.CENTER);
         stateSmile.setPreferredSize(new Dimension(20, 50));
+        stateSmile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SapperViewEventBus.getInstance().publish(SapperViewEventType.START_GAME, new StartGameEvent(SapperDifficulty.CURRENT));
+            }
+        });
 
         add(flags, BorderLayout.WEST);
         add(stateSmile, BorderLayout.CENTER);
@@ -37,12 +50,12 @@ public class StatePanel extends JPanel {
     }
 
     public void setLooseSmile() {
-        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("pictures/death.png")));
+        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/death.png")));
         stateSmile.setIcon(img);
     }
 
     public void setStartSmile() {
-        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("pictures/start smile.png")));
+        ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/start smile.png")));
         stateSmile.setIcon(img);
     }
 }
