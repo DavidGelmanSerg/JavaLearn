@@ -2,7 +2,6 @@ package view.bus;
 
 import view.bus.event.SapperViewEvent;
 import view.bus.event.SapperViewEventType;
-import view.bus.subscriber.SapperViewSubscriber;
 
 import java.util.ArrayList;
 import java.util.HashMap;

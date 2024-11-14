@@ -76,6 +76,4 @@ public class FieldPanel extends JPanel {
         }
         return null;
     }
-
-
 }
