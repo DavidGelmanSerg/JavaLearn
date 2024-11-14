@@ -6,10 +6,6 @@ import model.SapperModel;
 public class SapperController {
     private SapperModel model;
 
-    public SapperController(SapperModel model) {
-        this.model = model;
-    }
-
     public void setModel(SapperModel model) {
         this.model = model;
     }
@@ -28,5 +24,13 @@ public class SapperController {
         } else {
             model.start(difficulty);
         }
+    }
+
+    public void getPlayersRecords() {
+        model.getPlayersRecords();
+    }
+
+    public void saveRecord(String playerName) {
+        model.saveRecord(playerName);
     }
 }

@@ -2,8 +2,8 @@ package view.ui;
 
 import common.SapperDifficulty;
 import view.bus.SapperViewEventBus;
+import view.bus.event.SapperViewEvent;
 import view.bus.event.SapperViewEventType;
-import view.bus.event.StartGameEvent;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -15,6 +15,7 @@ import java.util.Objects;
 public class StatePanel extends JPanel {
     private final JLabel flags;
     private final JLabel stateSmile;
+    private final JLabel time;
 
     public StatePanel() {
         setLayout(new BorderLayout(-50, 0));
@@ -29,12 +30,19 @@ public class StatePanel extends JPanel {
         stateSmile.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                SapperViewEventBus.getInstance().publish(SapperViewEventType.START_GAME, new StartGameEvent(SapperDifficulty.CURRENT));
+                SapperViewEventBus.getInstance().publish(SapperViewEventType.START_GAME, new SapperViewEvent<>(SapperDifficulty.CURRENT));
             }
         });
 
+        time = new JLabel("00:00", SwingConstants.CENTER);
+        time.setFont(new Font("Sans Serif", Font.BOLD, 24));
+        time.setPreferredSize(new Dimension(80, 50));
+        time.setBorder(new LineBorder(Color.BLACK, 1));
+
+
         add(flags, BorderLayout.WEST);
         add(stateSmile, BorderLayout.CENTER);
+        add(time, BorderLayout.EAST);
 
         setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
         setVisible(true);
@@ -49,6 +57,10 @@ public class StatePanel extends JPanel {
         this.flags.setText(value);
     }
 
+    public void updateTime(String time) {
+        this.time.setText(time);
+    }
+
     public void setLooseSmile() {
         ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/death.png")));
         stateSmile.setIcon(img);
@@ -58,4 +70,5 @@ public class StatePanel extends JPanel {
         ImageIcon img = new ImageIcon(Objects.requireNonNull(getClass().getResource("resources/pictures/start smile.png")));
         stateSmile.setIcon(img);
     }
+
 }

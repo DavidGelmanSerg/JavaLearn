@@ -6,4 +6,8 @@ public enum SapperEventType {
     FLAGS_CHANGED,
     LOOSE,
     WIN,
+    INIT,
+    TIME_CHANGED,
+    RECORDS_SELECTED,
+    SAVE_RECORD
 }

@@ -1,27 +1,71 @@
 package common.observer.events;
 
+import common.Time;
 import common.dto.CellData;
+import common.dto.PlayerRecordData;
 
 import java.util.List;
 
 public class SapperEventFactory {
-    public SapperEvent getStartEvent(int side) {
-        return new SapperEvent(SapperEventType.START, null, 0, side);
+    public SapperEvent getInitEvent(int side, int flags) {
+        return SapperEvent.builder()
+                .setType(SapperEventType.INIT)
+                .setSide(side)
+                .setFlags(flags)
+                .build();
+    }
+
+    public SapperEvent getStartEvent() {
+        return SapperEvent.builder()
+                .setType(SapperEventType.START)
+                .build();
     }
 
     public SapperEvent getCellsChangedEvent(List<CellData> cellData) {
-        return new SapperEvent(SapperEventType.CELLS_CHANGED, cellData, 0, 0);
+        return SapperEvent.builder()
+                .setType(SapperEventType.CELLS_CHANGED)
+                .setCellData(cellData)
+                .build();
     }
 
     public SapperEvent getFlagsChangedEvent(int flags) {
-        return new SapperEvent(SapperEventType.FLAGS_CHANGED, null, flags, 0);
+        return SapperEvent.builder()
+                .setType(SapperEventType.FLAGS_CHANGED)
+                .setFlags(flags)
+                .build();
     }
 
-    public SapperEvent getLooseEvent(List<CellData> looseCells) {
-        return new SapperEvent(SapperEventType.LOOSE, looseCells, 0, 0);
+    public SapperEvent getTimeChangedEvent(Time time) {
+        return SapperEvent.builder()
+                .setType(SapperEventType.TIME_CHANGED)
+                .setTime(time)
+                .build();
     }
 
-    public SapperEvent getWinEvent() {
-        return new SapperEvent(SapperEventType.WIN, null, 0, 0);
+    public SapperEvent getLooseEvent() {
+        return SapperEvent.builder()
+                .setType(SapperEventType.LOOSE)
+                .build();
+    }
+
+    public SapperEvent getWinEvent(boolean isRecord) {
+        return SapperEvent.builder()
+                .setType(SapperEventType.WIN)
+                .isRecord(isRecord)
+                .build();
+    }
+
+    public SapperEvent getSelectedPlayersEvent(List<PlayerRecordData> records) {
+        return SapperEvent.builder()
+                .setType(SapperEventType.RECORDS_SELECTED)
+                .setRecordsData(records)
+                .build();
+    }
+
+    public SapperEvent getSaveRecordEvent(boolean isSaved) {
+        return SapperEvent.builder()
+                .setType(SapperEventType.SAVE_RECORD)
+                .isRecordSaved(isSaved)
+                .build();
     }
 }
