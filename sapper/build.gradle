@@ -1,0 +1,21 @@
+group = 'ru.gelman'
+version = 'v1'
+
+dependencies {
+    implementation group: 'com.h2database', name: 'h2', version: '2.2.220'
+}
+
+mainClassName = 'ru.gelman.Main'
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+application {
+    mainClass = mainClassName
+}
