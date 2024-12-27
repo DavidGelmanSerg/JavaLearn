@@ -3,6 +3,9 @@ version = 'v1'
 
 dependencies {
     implementation group: 'com.h2database', name: 'h2', version: '2.2.220'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.12'
+    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.5.12'
 }
 
 mainClassName = 'ru.gelman.Main'

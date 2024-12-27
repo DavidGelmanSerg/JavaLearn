@@ -40,3 +40,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Sapper app files ###
+/sapper/log/
+/sapper/config.properties
+/sapper/repository/

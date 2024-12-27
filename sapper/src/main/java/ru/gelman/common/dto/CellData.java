@@ -30,4 +30,14 @@ public class CellData {
     public CellState getState() {
         return state;
     }
+
+    @Override
+    public String toString() {
+        return "CellData{" +
+                "state=" + state +
+                ", row=" + row +
+                ", column=" + column +
+                ", bombsAround=" + bombsAround +
+                '}';
+    }
 }

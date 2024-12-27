@@ -1,5 +1,7 @@
 package ru.gelman.view.ui;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.gelman.common.CellState;
 import ru.gelman.common.dto.CellData;
 
@@ -11,6 +13,7 @@ public class CellButton extends JButton {
     private CellState previousState;
     private final int row;
     private final int col;
+    private final Logger logger = LoggerFactory.getLogger(SapperGameFrame.class);
 
     public CellButton(int row, int col) {
         this.row = row;
@@ -44,11 +47,20 @@ public class CellButton extends JButton {
                 }
             }
         }
+        logger.info("Set {} state to CellButton {}", this,state);
         previousState = state;
     }
 
     public boolean equalsByCoordinates(int x, int y) {
         return row == x && col == y;
+    }
+
+    @Override
+    public String toString() {
+        return "CellButton{" +
+                "row=" + row +
+                ", col=" + col +
+                '}';
     }
 
     @Override

@@ -77,6 +77,6 @@ public class FieldCell {
 
     @Override
     public String toString() {
-        return "[" + row + "," + column + "]";
+        return "Cell[" + row + "," + column + "]";
     }
 }

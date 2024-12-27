@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Аппендер для консоли, который обрабатывает уровень INFO -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%kvp %msg%n</pattern>
+        </encoder>
+        <!-- Указание кодировщика опущено -->
+    </appender>
+
+    <!-- Аппендер для файла, обрабатывающий уровень DEBUG -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>./log/sapper.log</file>
+
+        <encoder>
+            <pattern>%date %level [%thread] %logger{10} [%file:%line] -%kvp- %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Настройка логгера -->
+    <logger name="ru.gelman" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
+</configuration>

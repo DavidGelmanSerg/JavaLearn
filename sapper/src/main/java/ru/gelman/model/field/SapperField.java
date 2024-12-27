@@ -1,7 +1,10 @@
 package ru.gelman.model.field;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.gelman.common.CellState;
 import ru.gelman.common.dto.CellData;
+import ru.gelman.model.SapperModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +18,8 @@ public class SapperField {
 
     private final int bombs;
     private int flags;
+
+    private final Logger logger = LoggerFactory.getLogger(SapperModel.class);
 
     public SapperField(int side, int bombs) {
         this.side = side;
@@ -106,18 +111,21 @@ public class SapperField {
         cellsRegister.remove(getCell(x, y));
 
         Random random = new Random();
+        logger.info("Setting bombs");
         for (int i = 0; i < bombs; i++) {
             FieldCell cellFromRegister = cellsRegister.get(random.nextInt(cellsRegister.size()));
             FieldCell cellToSetBomb = getCell(cellFromRegister.getRow(), cellFromRegister.getColumn());
 
             cellToSetBomb.setBomb();
             cellsRegister.remove(cellFromRegister);
+            logger.debug("Bomb set to {}", cellToSetBomb);
 
             List<FieldCell> cellsAround = getCellsAround(cellToSetBomb);
             for (FieldCell c : cellsAround) {
                 c.incrementBombsAround();
             }
         }
+        logger.info("Bombs set successful");
     }
 
     private FieldCell getCell(int x, int y) {
@@ -130,15 +138,9 @@ public class SapperField {
     }
 
     public boolean isWin() {
-        int openedCellsAmount = 0;
-        for (FieldCell cell : cells) {
-            if (cell.isOpened()) {
-                openedCellsAmount++;
-            }
-        }
-
+        List<FieldCell> openedCells = cells.stream().filter(c -> !c.hasBomb() && c.isOpened()).toList();
         int cellsAmountExceptBombs = (side * side) - bombs;
-        return (openedCellsAmount == cellsAmountExceptBombs);
+        return (openedCells.size() == cellsAmountExceptBombs);
     }
 
     public boolean isBomb(int x, int y) {

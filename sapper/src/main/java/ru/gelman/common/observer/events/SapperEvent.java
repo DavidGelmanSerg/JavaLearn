@@ -28,6 +28,20 @@ public class SapperEvent {
         this.isRecordSaved = builder.isRecordSaved;
     }
 
+    @Override
+    public String toString() {
+        return "SapperEvent{" +
+                "type=" + type +
+                ", cellData=" + cellData +
+                ", flags=" + flags +
+                ", side=" + side +
+                ", time=" + time +
+                ", records=" + records +
+                ", isRecord=" + isRecord +
+                ", isRecordSaved=" + isRecordSaved +
+                '}';
+    }
+
     public static SapperEventBuilder builder() {
         return new SapperEventBuilder();
     }

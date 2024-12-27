@@ -1,5 +1,7 @@
 package ru.gelman.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.gelman.common.SapperDifficulty;
 import ru.gelman.common.Time;
 import ru.gelman.common.dto.CellData;
@@ -7,6 +9,7 @@ import ru.gelman.common.observer.SapperListener;
 import ru.gelman.common.observer.SapperObserver;
 import ru.gelman.common.observer.events.SapperEvent;
 import ru.gelman.common.observer.events.SapperEventFactory;
+import ru.gelman.common.observer.events.SapperEventType;
 import ru.gelman.model.field.SapperField;
 import ru.gelman.model.field.SapperFieldFactory;
 import ru.gelman.model.repository.records.RecordsRepository;
@@ -29,6 +32,7 @@ public class SapperModel implements SapperObserver, TimerListener {
     private SapperGameStatus status;
     private SapperField field;
     private Time currentGameTime;
+    private final Logger logger = LoggerFactory.getLogger(SapperModel.class);
 
     public SapperModel() {
         listeners = new ArrayList<>();
@@ -42,12 +46,14 @@ public class SapperModel implements SapperObserver, TimerListener {
 
 
     public void start() {
+        logger.info("Starting new game with difficulty: {}", difficulty);
         setStatus(SapperGameStatus.INIT);
         currentGameTime = ZERO_TIME;
         notifyListeners(eventFactory.getInitEvent(field.getSide(), field.getFlags()));
     }
 
     public void start(SapperDifficulty difficulty) {
+        logger.info("Starting new game with difficulty: {}", difficulty);
         currentGameTime = ZERO_TIME;
         this.difficulty = difficulty;
         field = SapperFieldFactory.getField(difficulty);
@@ -55,6 +61,7 @@ public class SapperModel implements SapperObserver, TimerListener {
     }
 
     public void restart() {
+        logger.info("Restarting game");
         currentGameTime = ZERO_TIME;
         field = SapperFieldFactory.getField(difficulty);
         start();
@@ -62,22 +69,27 @@ public class SapperModel implements SapperObserver, TimerListener {
 
     public void openCell(int x, int y) {
         if (!inProcess()) {
+            logger.info("FIRST CLICK. SETTING BOMBS");
             field.setBombs(x, y);
             setStatus(SapperGameStatus.IN_PROCESS);
             notifyListeners(eventFactory.getStartEvent());
+            logger.info("GAME STARTED");
         }
 
         if (field.isBomb(x, y) && !field.isMarked(x, y)) {
+            logger.info("GAME FINISHED: LOOSE");
             setStatus(SapperGameStatus.LOOSE);
             notifyListeners(eventFactory.getCellsChangedEvent(field.getCellsWhenLoose(x, y)));
             notifyListeners(eventFactory.getLooseEvent());
             return;
         }
 
+        logger.info("Opening Cell[{},{}]",x,y);
         List<CellData> openedCells = field.open(x, y);
         if (openedCells != null) {
             notifyListeners(eventFactory.getCellsChangedEvent(openedCells));
             if (field.isWin()) {
+                logger.info("GAME FINISHED: WIN");
                 setStatus(SapperGameStatus.WIN);
                 notifyListeners(eventFactory.getWinEvent(isRecord()));
             }
@@ -87,17 +99,22 @@ public class SapperModel implements SapperObserver, TimerListener {
     private boolean isRecord() {
         List<PlayerRecord> records = recordsRepository.getRecords(difficulty);
         Collections.sort(records);
-
-        boolean isRecord = records.isEmpty() || records.size() < RECORDS_LIMIT;
-        Time lastRecordPoints = records.get(records.size() - 1).getPoints();
-        isRecord = isRecord || currentGameTime.compareTo(lastRecordPoints) < 0;
-        return isRecord;
+        if(!records.isEmpty()){
+            logger.info("HAS RECORDS. CHECKING THE RECORD");
+            Time lastRecordPoints = records.get(records.size() - 1).getPoints();
+            logger.info("RESULT: {}",records.size() < RECORDS_LIMIT || currentGameTime.compareTo(lastRecordPoints) < 0);
+            return records.size() < RECORDS_LIMIT || currentGameTime.compareTo(lastRecordPoints) < 0;
+        }
+        logger.info("NO RECORDS.RETURN TRUE");
+        return true;
     }
 
     public void markCell(int x, int y) {
+        logger.info("Marking Cell[{},{}]",x,y);
         field.mark(x, y);
         List<CellData> cellData = List.of(field.getCellData(x, y));
         int flags = field.getFlags();
+        logger.info("Completed successful");
 
         notifyListeners(eventFactory.getCellsChangedEvent(cellData));
         notifyListeners(eventFactory.getFlagsChangedEvent(flags));
@@ -111,9 +128,13 @@ public class SapperModel implements SapperObserver, TimerListener {
     }
 
     public void saveRecord(String playerName) {
+        if(playerName == null){
+            notifyListeners(eventFactory.getSaveRecordEvent(false));
+            return;
+        }
         PlayerRecord record = recordsRepository.getRecord(playerName, difficulty);
         boolean isComplete;
-        if (record != null && !record.getPoints().equals(currentGameTime)) {
+        if (record != null && record.getPoints().compareTo(currentGameTime) < 0) {
             record.setTime(currentGameTime);
             isComplete = recordsRepository.update(record);
         } else {
@@ -123,6 +144,7 @@ public class SapperModel implements SapperObserver, TimerListener {
     }
 
     private void setStatus(SapperGameStatus status) {
+        logger.debug("Game status set to {}",status);
         this.status = status;
     }
 
@@ -148,6 +170,10 @@ public class SapperModel implements SapperObserver, TimerListener {
     @Override
     public void notifyListeners(SapperEvent event) {
         for (SapperListener l : listeners) {
+            if(event.getType() != SapperEventType.TIME_CHANGED){
+                logger.info("sending {} event to {}",event.getType(),l);
+                logger.debug("event: {}",event);
+            }
             l.update(event);
         }
     }
