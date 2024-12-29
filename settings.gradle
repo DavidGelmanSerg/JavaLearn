@@ -1,0 +1,4 @@
+rootProject.name = 'ru.gelman'
+include 'simple-calculator'
+include 'sapper'
+
