@@ -45,3 +45,7 @@ bin/
 /sapper/log/
 /sapper/config.properties
 /sapper/repository/
+
+
+### Producer Consumer files ###
+/producer-consumer/log/
