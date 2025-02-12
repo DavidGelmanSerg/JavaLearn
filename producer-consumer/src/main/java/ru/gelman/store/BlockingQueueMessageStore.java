@@ -13,21 +13,12 @@ public class BlockingQueueMessageStore implements MessageStore {
     }
 
     @Override
-    public void put(Message message){
-        try {
-            store.put(message);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    public void put(Message message) throws InterruptedException {
+        store.put(message);
     }
 
     @Override
-    public Message get() {
-        try {
-            return store.take();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
+    public Message get() throws InterruptedException {
+        return store.take();
     }
 }
