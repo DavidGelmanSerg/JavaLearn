@@ -16,7 +16,7 @@ public class SynchronizedMessageStore implements MessageStore {
 
     @Override
     public synchronized void put(Message message) throws InterruptedException {
-        while (messagesQueue.size() >= capacity) {
+        while (messagesQueue.size() == capacity) {
             wait();
         }
         messagesQueue.add(message);
