@@ -2,49 +2,31 @@ package ru.gelman.entity;
 
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Chat implements Comparable<Chat> {
     @NonNull
-    private final List<ChatMessage> messages;
+    @ToString.Include
+    private final ChatInfo info;
     @NonNull
     private final List<ChatUser> users;
-    @Getter
-    private final int creatorId;
-    @Setter
     @NonNull
-    @ToString.Include
-    private String name;
-    @Setter
-    @ToString.Include
-    @EqualsAndHashCode.Include
-    private Integer id;
-    @Setter
-    @ToString.Include
-    private boolean deleted;
+    private final List<ChatMessage> messages;
 
-    private Chat(Integer id, String name, int creatorId, List<ChatMessage> messages, List<ChatUser> users, boolean deleted) {
-        this.id = id;
-        this.name = name;
-        this.creatorId = creatorId;
-        this.messages = new ArrayList<>(messages);
-        this.users = users;
-        this.deleted = deleted;
-        Collections.sort(messages);
+    public void setId(int id) {
+        info.setId(id);
     }
 
-    public static Chat newChat(String name, int creatorId, List<ChatUser> users) {
-        return new Chat(null, name, creatorId, List.of(), users, false);
+    public void setName(String name) {
+        info.setName(name);
     }
 
-    public static Chat existingChat(Integer id, String name, int creatorId, List<ChatMessage> messages, List<ChatUser> users) {
-        return new Chat(id, name, creatorId, messages, users, false);
+    public void setDeleted(boolean deleted) {
+        info.setDeleted(deleted);
     }
 
     @Override

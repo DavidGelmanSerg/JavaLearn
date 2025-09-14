@@ -2,11 +2,14 @@ package ru.gelman.service;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
+import ru.gelman.entity.Chat;
+import ru.gelman.entity.ChatEntityFactory;
 import ru.gelman.entity.ChatSession;
 import ru.gelman.entity.ChatUser;
 import ru.gelman.repository.ChatRepository;
 import ru.gelman.service.exception.*;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -47,14 +50,13 @@ public class ChatService {
     }
 
     public ChatUser createUser(String name, String password) {
-        ChatUser user = ChatUser.newUser(name, password);
+        ChatUser user = ChatEntityFactory.newUser(name, password);
         if (repository.has(user)) {
             log.warn("user with name {} already exists", name);
             throw new UserAlreadyExistsException(user);
         }
         log.debug("saving new user: {}", user);
-        repository.save(user);
-        user = repository.getUser(name);
+        user = repository.save(user);
         log.debug("successfully saved user: {}", user);
         return user;
     }
@@ -77,9 +79,17 @@ public class ChatService {
         log.debug("login successful. creating session for user: {}", name);
         ChatUser user = repository.getUser(name);
         String sessionId = UUID.randomUUID().toString();
-        ChatSession session = new ChatSession(sessionId, user);
+        ChatSession session = ChatEntityFactory.newSession(sessionId, user);
         sessions.add(session);
         log.debug("successfully created session: {}", session);
         return session;
+    }
+
+    public Chat createChat(String sessionId, String name, int creatorId, List<ChatUser> users) {
+        checkSession(sessionId);
+        log.debug("{}: creating chat. name: {}; creating by: {} users: {}", sessionId, name, creatorId, users);
+        Chat chat = repository.save(ChatEntityFactory.newChat(name, creatorId, users));
+        log.debug("{}: successfully saved chat: {}", sessionId, chat);
+        return chat;
     }
 }

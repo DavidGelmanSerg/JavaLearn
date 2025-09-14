@@ -2,7 +2,9 @@ package ru.gelman.repository.h2;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
+import ru.gelman.entity.Chat;
 import ru.gelman.entity.ChatUser;
+import ru.gelman.mapper.JdbcRepositoryMapper;
 import ru.gelman.repository.ChatRepository;
 
 import java.sql.*;
@@ -81,7 +83,7 @@ public class ChatH2Repository implements ChatRepository {
     }
 
     @Override
-    public void save(ChatUser user) {
+    public ChatUser save(ChatUser user) {
         try (Connection connection = getConnection()) {
             PreparedStatement saveUserQuery = connection.prepareStatement(getQuery("insert_user"),
                     Statement.RETURN_GENERATED_KEYS);
@@ -89,12 +91,18 @@ public class ChatH2Repository implements ChatRepository {
             saveUserQuery.setString(3, user.getPassword());
 
             log.debug("insert user {} to database", user);
-            if (saveUserQuery.executeUpdate() <= 0) {
-                log.error("insert user with name {} failed", user.getName());
-                throw new RuntimeException("create user failed");
+            if (saveUserQuery.executeUpdate() > 0) {
+                ResultSet keys = saveUserQuery.getGeneratedKeys();
+                if (keys.next()) {
+                    log.debug("successfully insert user {}", user);
+                    int id = saveUserQuery.getGeneratedKeys().getInt(1);
+                    user.setId(id);
+                    return user;
+                }
             }
+            log.warn("insert user with name {} failed", user.getName());
+            throw new RuntimeException("create user failed");
 
-            log.debug("successfully insert user {}", user);
         } catch (SQLException e) {
             log.error("Database error occurred while inserting user: {}", user);
             throw new RuntimeException(e);
@@ -112,7 +120,7 @@ public class ChatH2Repository implements ChatRepository {
                 log.warn("user with name {} not found:", name);
                 throw new RuntimeException("User not found");
             }
-            ChatUser user = mapToUser(rs);
+            ChatUser user = JdbcRepositoryMapper.toUserEntity(rs);
             log.debug("found user: {}", user);
             return user;
         } catch (SQLException e) {
@@ -132,7 +140,7 @@ public class ChatH2Repository implements ChatRepository {
                 log.warn("user with id {} not found:", id);
                 throw new RuntimeException("User not found");
             }
-            ChatUser user = mapToUser(rs);
+            ChatUser user = JdbcRepositoryMapper.toUserEntity(rs);
             log.debug("found user: {}", user);
             return user;
         } catch (SQLException e) {
@@ -155,6 +163,54 @@ public class ChatH2Repository implements ChatRepository {
             return result;
         } catch (SQLException e) {
             log.error("Database error occurred while login user: {}", name);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Chat save(Chat chat) {
+        try (Connection connection = getConnection()) {
+            connection.setAutoCommit(false);
+            PreparedStatement saveChatInfoQuery;
+
+            log.debug("executing insert chat info query. chat: {}", chat);
+            saveChatInfoQuery = connection.prepareStatement(getQuery("insert_chat"), Statement.RETURN_GENERATED_KEYS);
+            saveChatInfoQuery.setInt(1, chat.getInfo().getId());
+            saveChatInfoQuery.setString(2, chat.getInfo().getName());
+            saveChatInfoQuery.setInt(3, chat.getInfo().getCreatorId());
+
+            if (saveChatInfoQuery.executeUpdate() <= 0) {
+                connection.rollback();
+                log.warn("inserting chat info failed. transaction rollback");
+                throw new RuntimeException("");
+            }
+
+            ResultSet keys = saveChatInfoQuery.getGeneratedKeys();
+            if (!keys.next()) {
+                connection.rollback();
+                log.warn("inserting chat info failed. auto generated key not found. connection rollback");
+                throw new RuntimeException("");
+            }
+
+            int chatId = keys.getInt(1);
+            chat.setId(chatId);
+
+            PreparedStatement linkUserToChatQuery = connection.prepareStatement(getQuery("insert_user_chat"));
+            for (ChatUser user : chat.getUsers()) {
+                linkUserToChatQuery.setInt(1, user.getId());
+                linkUserToChatQuery.setInt(2, chatId);
+
+                log.debug("linking user {} to chat {}", user, chat);
+                int userLinked = linkUserToChatQuery.executeUpdate();
+                if (userLinked <= 0) {
+                    connection.rollback();
+                    log.warn("linking user {} to chat {} failed. transaction rollback", user, chat);
+                    throw new RuntimeException("");
+                }
+            }
+            connection.commit();
+            return chat;
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -188,13 +244,4 @@ public class ChatH2Repository implements ChatRepository {
         }
         return query;
     }
-
-    private ChatUser mapToUser(ResultSet rs) throws SQLException {
-        log.debug("mapping result set to user");
-        int id = rs.getInt("id");
-        String name = rs.getString("name");
-        String password = rs.getString("password");
-        return ChatUser.existingUser(id, name, password);
-    }
-
 }

@@ -1,6 +1,7 @@
 package ru.gelman.repository;
 
 
+import ru.gelman.entity.Chat;
 import ru.gelman.entity.ChatUser;
 
 public interface ChatRepository {
@@ -9,7 +10,7 @@ public interface ChatRepository {
 
     boolean hasUser(int id);
 
-    void save(ChatUser user);
+    ChatUser save(ChatUser user);
 
     ChatUser getUser(String name);
 
@@ -18,4 +19,6 @@ public interface ChatRepository {
     boolean login(String name, String password);
 
     boolean hasUser(String name);
+
+    Chat save(Chat chat);
 }
