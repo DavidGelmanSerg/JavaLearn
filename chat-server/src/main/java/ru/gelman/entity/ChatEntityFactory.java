@@ -1,6 +1,7 @@
 package ru.gelman.entity;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ChatEntityFactory {
@@ -21,8 +22,9 @@ public class ChatEntityFactory {
         return new Chat(info, users, messages);
     }
 
-    public static ChatMessage newMessage(int chatId, int creatorId, String content, LocalDateTime creationDateTime) {
-        return new ChatMessage(chatId, creatorId, creationDateTime, null, content, false);
+    public static ChatMessage newMessage(int chatId, int creatorId, String content, String creationDateTime) {
+        LocalDateTime messageDateTime = LocalDateTime.parse(creationDateTime, DateTimeFormatter.ISO_DATE_TIME);
+        return new ChatMessage(chatId, creatorId, messageDateTime, null, content, false);
     }
 
     public static ChatMessage existingMessage(int id, int chatId, int creatorId, String content, LocalDateTime creationDateTime) {

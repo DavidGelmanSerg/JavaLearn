@@ -2,10 +2,7 @@ package ru.gelman.service;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
-import ru.gelman.entity.Chat;
-import ru.gelman.entity.ChatEntityFactory;
-import ru.gelman.entity.ChatSession;
-import ru.gelman.entity.ChatUser;
+import ru.gelman.entity.*;
 import ru.gelman.repository.ChatRepository;
 import ru.gelman.service.exception.*;
 
@@ -91,5 +88,13 @@ public class ChatService {
         Chat chat = repository.save(ChatEntityFactory.newChat(name, creatorId, users));
         log.debug("{}: successfully saved chat: {}", sessionId, chat);
         return chat;
+    }
+
+    public ChatMessage createMessage(String sessionId, int chatId, int creatorId, String content, String creationDateTime) {
+        checkSession(sessionId);
+        log.debug("{} creating message. chatId: {}, creatorId {}, content: {}, timestamp: {}", sessionId, chatId, creatorId, content, creationDateTime);
+        ChatMessage message = repository.save(ChatEntityFactory.newMessage(chatId, creatorId, content, creationDateTime));
+        log.debug("{}: successfully saved message: {}", sessionId, message);
+        return message;
     }
 }

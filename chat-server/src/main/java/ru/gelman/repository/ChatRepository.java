@@ -2,6 +2,7 @@ package ru.gelman.repository;
 
 
 import ru.gelman.entity.Chat;
+import ru.gelman.entity.ChatMessage;
 import ru.gelman.entity.ChatUser;
 
 public interface ChatRepository {
@@ -21,4 +22,6 @@ public interface ChatRepository {
     boolean hasUser(String name);
 
     Chat save(Chat chat);
+
+    ChatMessage save(ChatMessage message);
 }

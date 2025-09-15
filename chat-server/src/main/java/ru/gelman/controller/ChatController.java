@@ -1,11 +1,9 @@
 package ru.gelman.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.gelman.dto.ChatData;
-import ru.gelman.dto.CreateChatRq;
-import ru.gelman.dto.SessionData;
-import ru.gelman.dto.UserData;
+import ru.gelman.dto.*;
 import ru.gelman.entity.Chat;
+import ru.gelman.entity.ChatMessage;
 import ru.gelman.entity.ChatSession;
 import ru.gelman.entity.ChatUser;
 import ru.gelman.mapper.ServiceMapper;
@@ -46,4 +44,9 @@ public class ChatController {
         return ServiceMapper.toChatDto(chat);
     }
 
+    public MessageData createMessage(String sessionId, CreateMessageRq rq) {
+        log.info("{}: creating message. chatId: {}, content: {}", sessionId, rq.chatId(), rq.content());
+        ChatMessage message = service.createMessage(sessionId, rq.chatId(), rq.creatorId(), rq.content(), rq.creationDateTime());
+        return ServiceMapper.toMessageDto(message);
+    }
 }

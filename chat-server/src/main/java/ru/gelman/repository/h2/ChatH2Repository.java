@@ -3,6 +3,7 @@ package ru.gelman.repository.h2;
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
 import ru.gelman.entity.Chat;
+import ru.gelman.entity.ChatMessage;
 import ru.gelman.entity.ChatUser;
 import ru.gelman.mapper.JdbcRepositoryMapper;
 import ru.gelman.repository.ChatRepository;
@@ -162,7 +163,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("execution result: {}", result);
             return result;
         } catch (SQLException e) {
-            log.error("Database error occurred while login user: {}", name);
+            log.error("database error occurred while login user: {}", name);
             throw new RuntimeException(e);
         }
     }
@@ -211,6 +212,40 @@ public class ChatH2Repository implements ChatRepository {
             connection.commit();
             return chat;
         } catch (SQLException e) {
+            log.error("database error occurred while saving chat: {}", chat);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ChatMessage save(ChatMessage message) {
+        try (Connection connection = getConnection()) {
+            log.debug("start saving message to database. message: {}", message);
+            log.debug("building insert request");
+            PreparedStatement saveMessageQuery = connection.prepareStatement(getQuery("insert_message"), Statement.RETURN_GENERATED_KEYS);
+            saveMessageQuery.setString(1, message.getContent());
+            saveMessageQuery.setObject(2, message.getCreationDateTime());
+            saveMessageQuery.setInt(3, message.getCreatorId());
+            saveMessageQuery.setInt(4, message.getChatId());
+
+            log.debug("executing insert request");
+            int effectedRows = saveMessageQuery.executeUpdate();
+            if (effectedRows <= 0) {
+                log.warn("inserting failed. no message was saved");
+                throw new RuntimeException("");
+            }
+
+            ResultSet keys = saveMessageQuery.getGeneratedKeys();
+            if (!keys.next()) {
+                log.warn("inserting failed. no key was generated for message: {}", message);
+                throw new RuntimeException("");
+            }
+
+            message.setId(keys.getInt(1));
+            log.debug("successfully saved message with id: {}", message.getId());
+            return message;
+        } catch (SQLException e) {
+            log.error("database error occurred while saving message: {}", message);
             throw new RuntimeException(e);
         }
     }
