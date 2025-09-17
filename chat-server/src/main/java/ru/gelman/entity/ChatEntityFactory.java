@@ -3,6 +3,7 @@ package ru.gelman.entity;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ChatEntityFactory {
     public static ChatUser newUser(String name, String password) {
@@ -31,7 +32,12 @@ public class ChatEntityFactory {
         return new ChatMessage(chatId, creatorId, creationDateTime, id, content, false);
     }
 
-    public static ChatSession newSession(String sessionId, ChatUser user) {
-        return new ChatSession(sessionId, user, true);
+    public static ChatSession newSession(String sessionId, ChatUser user, int sessionTimeLive, TimeUnit unit) {
+        LocalDateTime expiredDate = LocalDateTime.now().plusMinutes(unit.toMinutes(sessionTimeLive));
+        return new ChatSession(sessionId, user, expiredDate);
+    }
+
+    public static ChatSession existingSession(String sessionId, ChatUser user, LocalDateTime expired) {
+        return new ChatSession(sessionId, user, expired);
     }
 }

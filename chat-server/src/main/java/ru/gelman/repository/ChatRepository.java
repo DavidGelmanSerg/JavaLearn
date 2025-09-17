@@ -3,6 +3,7 @@ package ru.gelman.repository;
 
 import ru.gelman.entity.Chat;
 import ru.gelman.entity.ChatMessage;
+import ru.gelman.entity.ChatSession;
 import ru.gelman.entity.ChatUser;
 
 public interface ChatRepository {
@@ -24,4 +25,8 @@ public interface ChatRepository {
     Chat save(Chat chat);
 
     ChatMessage save(ChatMessage message);
+
+    void save(ChatSession session);
+
+    ChatSession getSession(String sessionId);
 }

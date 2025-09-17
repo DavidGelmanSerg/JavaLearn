@@ -2,6 +2,8 @@ package ru.gelman.entity;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -11,5 +13,5 @@ public class ChatSession {
     private final String sessionId;
     private final ChatUser user;
     @Setter
-    private boolean isActive;
+    private LocalDateTime expiredDate;
 }

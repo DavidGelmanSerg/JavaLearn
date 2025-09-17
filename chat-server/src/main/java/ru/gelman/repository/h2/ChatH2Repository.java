@@ -2,13 +2,12 @@ package ru.gelman.repository.h2;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
-import ru.gelman.entity.Chat;
-import ru.gelman.entity.ChatMessage;
-import ru.gelman.entity.ChatUser;
+import ru.gelman.entity.*;
 import ru.gelman.mapper.JdbcRepositoryMapper;
 import ru.gelman.repository.ChatRepository;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.Properties;
 
 @Slf4j
@@ -26,7 +25,6 @@ public class ChatH2Repository implements ChatRepository {
         password = config.getProperty("password", "");
 
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
-
             String createUsersTableQuery = getQuery("create_users_table");
             log.debug("executing query: {}", createUsersTableQuery);
             statement.executeUpdate(createUsersTableQuery);
@@ -43,6 +41,9 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("executing query: {}", createChatsUsersTableQuery);
             statement.executeUpdate(createChatsUsersTableQuery);
 
+            String createSessionsTableQuery = getQuery("create_sessions_table");
+            log.debug("executing query: {}", createSessionsTableQuery);
+            statement.executeUpdate(createSessionsTableQuery);
         } catch (SQLException e) {
             log.error("failed to initialize h2 database");
             throw new RuntimeException("App could not connect to database!", e);
@@ -246,6 +247,53 @@ public class ChatH2Repository implements ChatRepository {
             return message;
         } catch (SQLException e) {
             log.error("database error occurred while saving message: {}", message);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void save(ChatSession session) {
+        try (Connection connection = getConnection()) {
+            log.debug("start saving session to database. session: {}", session);
+            log.debug("building insert request");
+            PreparedStatement saveSessionQuery = connection.prepareStatement(getQuery("insert_session"));
+            saveSessionQuery.setString(1, session.getSessionId());
+            saveSessionQuery.setInt(2, session.getUser().getId());
+            saveSessionQuery.setObject(3, session.getExpiredDate());
+
+            log.debug("executing insert request");
+            int effectedRows = saveSessionQuery.executeUpdate();
+            if (effectedRows <= 0) {
+                log.warn("inserting failed. no message was saved");
+                throw new RuntimeException("");
+            }
+
+            log.debug("successfully saved session: {}", session);
+        } catch (SQLException e) {
+            log.error("database error occurred while saving message: {}", session);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ChatSession getSession(String sessionId) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement getSessionQuery = connection.prepareStatement(getQuery("select_session"));
+            getSessionQuery.setString(1, sessionId);
+            log.debug("executing select session query. sessionId: {}", sessionId);
+            ResultSet rs = getSessionQuery.executeQuery();
+            if (!rs.next()) {
+                log.warn("session with id {} not found:", sessionId);
+                throw new RuntimeException("session not found");
+            }
+
+            ChatUser user = getUser(rs.getInt("userId"));
+            LocalDateTime expired = rs.getObject("expiredDate", LocalDateTime.class);
+            ChatSession session = ChatEntityFactory.existingSession(sessionId, user, expired);
+            log.debug("found session: {}", session);
+            return session;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting session with id: {}", sessionId);
             throw new RuntimeException(e);
         }
     }

@@ -6,40 +6,29 @@ import ru.gelman.entity.*;
 import ru.gelman.repository.ChatRepository;
 import ru.gelman.service.exception.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ChatService {
     private static final Properties SERVICE_CONFIG = PropertyLoader.load("service_config.properties");
-    private final Set<ChatSession> sessions;
     private final ChatRepository repository;
 
     public ChatService(ChatRepository repository) {
-        this.sessions = ConcurrentHashMap.newKeySet();
         this.repository = repository;
-    }
-
-    private ChatSession getSession(String sessionId) {
-        for (ChatSession session : sessions) {
-            if (session.getSessionId().equals(sessionId)) {
-                return session;
-            }
-        }
-        return null;
     }
 
     private void checkSession(String sessionId) {
         log.debug("checking session: {}", sessionId);
-        ChatSession session = getSession(sessionId);
+        ChatSession session = repository.getSession(sessionId);
         if (session == null) {
             log.debug("session not found. id: {}", sessionId);
             throw new SessionNotFoundException(sessionId);
         }
-        if (!session.isActive()) {
+        if (LocalDateTime.now().isAfter(session.getExpiredDate())) {
             log.debug("session is inactive. id: {}", sessionId);
             throw new SessionInactiveException(sessionId);
         }
@@ -76,8 +65,11 @@ public class ChatService {
         log.debug("login successful. creating session for user: {}", name);
         ChatUser user = repository.getUser(name);
         String sessionId = UUID.randomUUID().toString();
-        ChatSession session = ChatEntityFactory.newSession(sessionId, user);
-        sessions.add(session);
+
+        TimeUnit sessionTimeLiveUnit = TimeUnit.valueOf(SERVICE_CONFIG.getProperty("session_time_units"));
+        int sessionTimeLive = Integer.parseInt(SERVICE_CONFIG.getProperty("session_time_live"));
+        ChatSession session = ChatEntityFactory.newSession(sessionId, user, sessionTimeLive, sessionTimeLiveUnit);
+        repository.save(session);
         log.debug("successfully created session: {}", session);
         return session;
     }
