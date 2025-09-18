@@ -16,7 +16,8 @@ public class ServiceMapper {
     }
 
     public static SessionData toSessionDto(ChatSession session) {
-        return new SessionData(toUserDto(session.getUser()), session.getSessionId());
+        String expiredDate = session.getExpiredDate().format(DateTimeFormatter.ISO_DATE_TIME);
+        return new SessionData(toUserDto(session.getUser()), session.getSessionId(), expiredDate);
     }
 
     public static ChatData toChatDto(Chat chat) {
@@ -38,6 +39,4 @@ public class ServiceMapper {
         String messageDateTime = message.getCreationDateTime().format(DateTimeFormatter.ISO_DATE_TIME);
         return new MessageData(message.getId(), message.getChatId(), message.getCreatorId(), message.getContent(), messageDateTime);
     }
-
-
 }

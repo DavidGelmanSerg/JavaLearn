@@ -4,7 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
 import ru.gelman.entity.*;
 import ru.gelman.repository.ChatRepository;
-import ru.gelman.service.exception.*;
+import ru.gelman.service.exception.LoginFailedException;
+import ru.gelman.service.exception.SessionInactiveException;
+import ru.gelman.service.exception.UserAlreadyExistsException;
+import ru.gelman.service.exception.UserNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,10 +27,6 @@ public class ChatService {
     private void checkSession(String sessionId) {
         log.debug("checking session: {}", sessionId);
         ChatSession session = repository.getSession(sessionId);
-        if (session == null) {
-            log.debug("session not found. id: {}", sessionId);
-            throw new SessionNotFoundException(sessionId);
-        }
         if (LocalDateTime.now().isAfter(session.getExpiredDate())) {
             log.debug("session is inactive. id: {}", sessionId);
             throw new SessionInactiveException(sessionId);
@@ -88,5 +87,23 @@ public class ChatService {
         ChatMessage message = repository.save(ChatEntityFactory.newMessage(chatId, creatorId, content, creationDateTime));
         log.debug("{}: successfully saved message: {}", sessionId, message);
         return message;
+    }
+
+    public void activateSession(String sessionId) {
+        log.debug("activating session with id: {}", sessionId);
+        ChatSession session = repository.getSession(sessionId);
+
+        TimeUnit sessionTimeLiveUnit = TimeUnit.valueOf(SERVICE_CONFIG.getProperty("session_time_units"));
+        int sessionTimeLive = Integer.parseInt(SERVICE_CONFIG.getProperty("session_time_live"));
+        LocalDateTime expiredDate = LocalDateTime.now().plusMinutes(sessionTimeLiveUnit.toMinutes(sessionTimeLive));
+
+        log.debug("updating session expire date. old value: {}; new value: {}", session.getExpiredDate(), expiredDate);
+        session.setExpiredDate(expiredDate);
+        repository.save(session);
+        log.debug("successfully updated session: {}", session);
+    }
+
+    public ChatSession getSession(String sessionId) {
+        return repository.getSession(sessionId);
     }
 }

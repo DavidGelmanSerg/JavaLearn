@@ -29,4 +29,6 @@ public interface ChatRepository {
     void save(ChatSession session);
 
     ChatSession getSession(String sessionId);
+
+    void updateSessionExpiredDate(ChatSession session);
 }

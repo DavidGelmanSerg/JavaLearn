@@ -49,4 +49,11 @@ public class ChatController {
         ChatMessage message = service.createMessage(sessionId, rq.chatId(), rq.creatorId(), rq.content(), rq.creationDateTime());
         return ServiceMapper.toMessageDto(message);
     }
+
+    public SessionData activateSession(String sessionId) {
+        log.info("activating session. sessionId: {}", sessionId);
+        service.activateSession(sessionId);
+        ChatSession session = service.getSession(sessionId);
+        return ServiceMapper.toSessionDto(session);
+    }
 }

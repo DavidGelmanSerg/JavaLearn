@@ -298,6 +298,25 @@ public class ChatH2Repository implements ChatRepository {
         }
     }
 
+    @Override
+    public void updateSessionExpiredDate(ChatSession session) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement updateSessionExpiredDateQuery = connection.prepareStatement(getQuery("update_session_expired_date"));
+            updateSessionExpiredDateQuery.setObject(1, session.getExpiredDate());
+            updateSessionExpiredDateQuery.setString(2, session.getSessionId());
+
+            log.debug("executing update session expired date query. session: {}", session);
+            int updatedRows = updateSessionExpiredDateQuery.executeUpdate();
+            if (updatedRows < 0) {
+                log.warn("updated session expired dated failed");
+                throw new RuntimeException("");
+            }
+        } catch (SQLException e) {
+            log.error("Database error occurred while updating session: {}", session);
+            throw new RuntimeException(e);
+        }
+    }
+
     private boolean existsById(Integer id, String query) {
         try (Connection connection = getConnection()) {
             PreparedStatement existsQuery = connection.prepareStatement(query);
