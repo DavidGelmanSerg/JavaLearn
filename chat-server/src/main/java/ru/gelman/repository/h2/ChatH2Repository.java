@@ -99,15 +99,14 @@ public class ChatH2Repository implements ChatRepository {
             if (saveUserQuery.executeUpdate() > 0) {
                 ResultSet keys = saveUserQuery.getGeneratedKeys();
                 if (keys.next()) {
-                    log.debug("successfully insert user {}", user);
                     int id = saveUserQuery.getGeneratedKeys().getInt(1);
                     user.setId(id);
+                    log.debug("successfully insert user {}", user);
                     return user;
                 }
             }
             log.warn("insert user with name {} failed", user.getName());
             throw new RuntimeException("create user failed");
-
         } catch (SQLException e) {
             log.error("Database error occurred while inserting user: {}", user);
             throw new RuntimeException(e);
@@ -137,17 +136,7 @@ public class ChatH2Repository implements ChatRepository {
     @Override
     public ChatUser getUser(int id) {
         try (Connection connection = getConnection()) {
-            PreparedStatement getUserQuery = connection.prepareStatement(getQuery("select_user_by_id"));
-            getUserQuery.setInt(1, id);
-            log.debug("executing select user query. id: {}", id);
-            ResultSet rs = getUserQuery.executeQuery();
-            if (!rs.next()) {
-                log.warn("user with id {} not found:", id);
-                throw new RuntimeException("User not found");
-            }
-            ChatUser user = JdbcRepositoryMapper.toUserEntity(rs);
-            log.debug("found user: {}", user);
-            return user;
+            return selectUser(connection, id);
         } catch (SQLException e) {
             log.error("Database error occurred while selecting user: {}", id);
             throw new RuntimeException(e);
@@ -286,7 +275,7 @@ public class ChatH2Repository implements ChatRepository {
                 throw new RuntimeException("session not found");
             }
 
-            ChatUser user = getUser(rs.getInt("userId"));
+            ChatUser user = selectUser(connection, rs.getInt("userId"));
             LocalDateTime expired = rs.getObject("expiredDate", LocalDateTime.class);
             ChatSession session = ServiceMapper.toSession(sessionId, user, expired);
             log.debug("found session: {}", session);
@@ -327,7 +316,7 @@ public class ChatH2Repository implements ChatRepository {
             List<ChatSession> sessions = new ArrayList<>();
             while (sessionsRs.next()) {
                 String sessionId = sessionsRs.getString("sessionId");
-                ChatUser user = getUser(sessionsRs.getInt("userId"));
+                ChatUser user = selectUser(connection, sessionsRs.getInt("userId"));
                 LocalDateTime expiredDate = sessionsRs.getObject("expiredDate", LocalDateTime.class);
                 ChatSession session = ServiceMapper.toSession(sessionId, user, expiredDate);
 
@@ -376,7 +365,7 @@ public class ChatH2Repository implements ChatRepository {
             List<ChatMessage> messages = new ArrayList<>();
             while (messagesRs.next()) {
                 int id = messagesRs.getInt("id");
-                ChatUser creator = getUser(messagesRs.getInt("creatorId"));
+                ChatUser creator = selectUser(connection, messagesRs.getInt("creatorId"));
                 int chatId = messagesRs.getInt("chatId");
                 String content = messagesRs.getString("content");
                 LocalDateTime creationDateTime = messagesRs.getObject("creationDateTime", LocalDateTime.class);
@@ -450,6 +439,20 @@ public class ChatH2Repository implements ChatRepository {
             log.error("database error occurred while executing exists by id query. id: {}", id);
             throw new RuntimeException(e);
         }
+    }
+
+    private ChatUser selectUser(Connection connection, int id) throws SQLException {
+        PreparedStatement getUserQuery = connection.prepareStatement(getQuery("select_user_by_id"));
+        getUserQuery.setInt(1, id);
+        log.debug("executing select user query. id: {}", id);
+        ResultSet rs = getUserQuery.executeQuery();
+        if (!rs.next()) {
+            log.warn("user with id {} not found:", id);
+            throw new RuntimeException("User not found");
+        }
+        ChatUser user = JdbcRepositoryMapper.toUserEntity(rs);
+        log.debug("found user: {}", user);
+        return user;
     }
 
     private Connection getConnection() throws SQLException {
