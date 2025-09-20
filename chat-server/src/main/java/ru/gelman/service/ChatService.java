@@ -76,7 +76,7 @@ public class ChatService {
 
     public Chat createChat(String sessionId, String name, int creatorId, List<ChatUser> users) {
         checkSession(sessionId);
-        log.debug("{}: creating chat. name: {}; creating by: {} users: {}", sessionId, name, creatorId, users);
+        log.debug("creating chat. sessionId: {} name: {}; creating by: {} users: {}", sessionId, name, creatorId, users);
         Chat chat = repository.save(ServiceMapper.toChat(name, creatorId, users));
         log.debug("{}: successfully saved chat: {}", sessionId, chat);
         return chat;
@@ -84,9 +84,9 @@ public class ChatService {
 
     public ChatMessage createMessage(String sessionId, int chatId, ChatUser creator, String content, String creationDateTime) {
         checkSession(sessionId);
-        log.debug("{} creating message. chatId: {}, creator {}, content: {}, timestamp: {}", sessionId, chatId, creator, content, creationDateTime);
+        log.debug("creating message. sessionId: {} chatId: {}, creator {}, content: {}, timestamp: {}", sessionId, chatId, creator, content, creationDateTime);
         ChatMessage message = repository.save(ServiceMapper.toMessage(chatId, creator, content, creationDateTime));
-        log.debug("{}: successfully saved message: {}", sessionId, message);
+        log.debug("successfully saved message: {}. sessionId: {}", message, sessionId);
         return message;
     }
 
@@ -105,11 +105,13 @@ public class ChatService {
     }
 
     public ChatSession getSession(String sessionId) {
+        log.debug("getting session. sessionId: {}", sessionId);
         return repository.getSession(sessionId);
     }
 
     public List<ChatSession> getActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
+        log.debug("getting active sessions. current timestamp: {}", now);
         return repository.getSessionsBefore(now);
     }
 
@@ -121,8 +123,8 @@ public class ChatService {
 
     public List<ChatMessage> getChatMessages(String sessionId, ChatInfo chat) {
         checkSession(sessionId);
-        log.debug("getting messages for chat: {}", chat);
         int messagesLimit = Integer.parseInt(SERVICE_CONFIG.getProperty("message_limit"));
+        log.debug("getting last {} messages for chat: {}", messagesLimit, chat);
         return repository.getLastMessages(chat, messagesLimit);
     }
 

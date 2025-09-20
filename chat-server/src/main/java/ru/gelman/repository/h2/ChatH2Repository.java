@@ -187,14 +187,14 @@ public class ChatH2Repository implements ChatRepository {
             if (saveChatInfoQuery.executeUpdate() <= 0) {
                 connection.rollback();
                 log.warn("inserting chat info failed. transaction rollback");
-                throw new RuntimeException("");
+                throw new RuntimeException("inserting chat failed");
             }
 
             ResultSet keys = saveChatInfoQuery.getGeneratedKeys();
             if (!keys.next()) {
                 connection.rollback();
                 log.warn("inserting chat info failed. auto generated key not found. connection rollback");
-                throw new RuntimeException("");
+                throw new RuntimeException("inserting chat failed");
             }
 
             int chatId = keys.getInt(1);
@@ -210,7 +210,7 @@ public class ChatH2Repository implements ChatRepository {
                 if (userLinked <= 0) {
                     connection.rollback();
                     log.warn("linking user {} to chat {} failed. transaction rollback", user, chat);
-                    throw new RuntimeException("");
+                    throw new RuntimeException("inserting chat failed");
                 }
             }
             connection.commit();
@@ -224,25 +224,23 @@ public class ChatH2Repository implements ChatRepository {
     @Override
     public ChatMessage save(ChatMessage message) {
         try (Connection connection = getConnection()) {
-            log.debug("start saving message to database. message: {}", message);
-            log.debug("building insert request");
             PreparedStatement saveMessageQuery = connection.prepareStatement(getQuery("insert_message"), Statement.RETURN_GENERATED_KEYS);
             saveMessageQuery.setString(1, message.getContent());
             saveMessageQuery.setObject(2, message.getCreationDateTime());
             saveMessageQuery.setInt(3, message.getCreator().getId());
             saveMessageQuery.setInt(4, message.getChatId());
 
-            log.debug("executing insert request");
+            log.debug("executing insert message query. message: {}", message);
             int effectedRows = saveMessageQuery.executeUpdate();
             if (effectedRows <= 0) {
-                log.warn("inserting failed. no message was saved");
-                throw new RuntimeException("");
+                log.warn("insert message query failed. no message was saved");
+                throw new RuntimeException("insert message query failed");
             }
 
             ResultSet keys = saveMessageQuery.getGeneratedKeys();
             if (!keys.next()) {
-                log.warn("inserting failed. no key was generated for message: {}", message);
-                throw new RuntimeException("");
+                log.warn("insert message query failed. no key was generated for message: {}", message);
+                throw new RuntimeException("insert message query failed");
             }
 
             message.setId(keys.getInt(1));
@@ -257,23 +255,21 @@ public class ChatH2Repository implements ChatRepository {
     @Override
     public void save(ChatSession session) {
         try (Connection connection = getConnection()) {
-            log.debug("start saving session to database. session: {}", session);
-            log.debug("building insert request");
             PreparedStatement saveSessionQuery = connection.prepareStatement(getQuery("insert_session"));
             saveSessionQuery.setString(1, session.getSessionId());
             saveSessionQuery.setInt(2, session.getUser().getId());
             saveSessionQuery.setObject(3, session.getExpiredDate());
 
-            log.debug("executing insert request");
+            log.debug("executing insert session query. session: {}", session);
             int effectedRows = saveSessionQuery.executeUpdate();
             if (effectedRows <= 0) {
-                log.warn("inserting failed. no message was saved");
-                throw new RuntimeException("");
+                log.warn("insert session query failed");
+                throw new RuntimeException("insert session query failed");
             }
 
             log.debug("successfully saved session: {}", session);
         } catch (SQLException e) {
-            log.error("database error occurred while saving message: {}", session);
+            log.error("database error occurred while saving session: {}", session);
             throw new RuntimeException(e);
         }
     }
@@ -296,7 +292,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("found session: {}", session);
             return session;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting session with id: {}", sessionId);
+            log.error("database error occurred while selecting session with id: {}", sessionId);
             throw new RuntimeException(e);
         }
     }
@@ -312,10 +308,10 @@ public class ChatH2Repository implements ChatRepository {
             int updatedRows = updateSessionExpiredDateQuery.executeUpdate();
             if (updatedRows < 0) {
                 log.warn("updated session expired dated failed");
-                throw new RuntimeException("");
+                throw new RuntimeException("updated session expired dated failed");
             }
         } catch (SQLException e) {
-            log.error("Database error occurred while updating session: {}", session);
+            log.error("database error occurred while updating session: {}", session);
             throw new RuntimeException(e);
         }
     }
@@ -341,7 +337,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("successfully get {} sessions from database", sessions.size());
             return sessions;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting sessions with expired date before: {}", timestamp);
+            log.error("database error occurred while selecting sessions with expired date before: {}", timestamp);
             throw new RuntimeException(e);
         }
     }
@@ -363,7 +359,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("successfully get {} chat infos from database", chatInfos.size());
             return chatInfos;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting chat infos with for user: {}", user);
+            log.error("database error occurred while selecting chat infos with for user: {}", user);
             throw new RuntimeException(e);
         }
     }
@@ -375,7 +371,7 @@ public class ChatH2Repository implements ChatRepository {
             selectMessagesQuery.setInt(1, chat.getId());
             selectMessagesQuery.setInt(2, messagesLimit);
 
-            log.debug("executing select messages for chat: {}", chat);
+            log.debug("executing select last {} messages for chat: {}", messagesLimit, chat);
             ResultSet messagesRs = selectMessagesQuery.executeQuery();
             List<ChatMessage> messages = new ArrayList<>();
             while (messagesRs.next()) {
@@ -390,10 +386,10 @@ public class ChatH2Repository implements ChatRepository {
                 log.debug("adding message: {} to list", message);
                 messages.add(message);
             }
-            log.debug("successfully get {} messages from database", messages.size());
+            log.debug("successfully got {} messages from database", messages.size());
             return messages;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting messages for chat: {}", chat);
+            log.error("database error occurred while selecting messages for chat: {}", chat);
             throw new RuntimeException(e);
         }
     }
@@ -413,7 +409,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("found chat: {}", chatInfo);
             return chatInfo;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting chat info by id: {}", chatId);
+            log.error("database error occurred while selecting chat info by id: {}", chatId);
             throw new RuntimeException(e);
         }
     }
@@ -435,7 +431,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("successfully get {} users from database", users.size());
             return users;
         } catch (SQLException e) {
-            log.error("Database error occurred while selecting users for chat: {}", chat);
+            log.error("database error occurred while selecting users for chat: {}", chat);
             throw new RuntimeException(e);
         }
     }
@@ -451,7 +447,7 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("execution result: {}", result);
             return result;
         } catch (SQLException e) {
-            log.error("Database error occurred while executing exists by id query. id: {}", id);
+            log.error("database error occurred while executing exists by id query. id: {}", id);
             throw new RuntimeException(e);
         }
     }
