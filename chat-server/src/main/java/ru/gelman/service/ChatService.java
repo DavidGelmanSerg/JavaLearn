@@ -35,10 +35,9 @@ public class ChatService {
         log.debug("session {} exists and is active", session);
     }
 
-    public ChatUser createUser(String name, String password) {
-        ChatUser user = ServiceMapper.toUser(name, password);
+    public ChatUser createUser(ChatUser user) {
         if (repository.has(user)) {
-            log.warn("user with name {} already exists", name);
+            log.warn("user with name {} already exists", user.getName());
             throw new UserAlreadyExistsException(user);
         }
         log.debug("saving new user: {}", user);
@@ -74,18 +73,18 @@ public class ChatService {
         return session;
     }
 
-    public Chat createChat(String sessionId, String name, int creatorId, List<ChatUser> users) {
+    public Chat createChat(String sessionId, Chat chat) {
         checkSession(sessionId);
-        log.debug("creating chat. sessionId: {} name: {}; creating by: {} users: {}", sessionId, name, creatorId, users);
-        Chat chat = repository.save(ServiceMapper.toChat(name, creatorId, users));
+        log.debug("creating chat. sessionId: {} chat: {}", sessionId, chat);
+        chat = repository.save(chat);
         log.debug("{}: successfully saved chat: {}", sessionId, chat);
         return chat;
     }
 
-    public ChatMessage createMessage(String sessionId, int chatId, ChatUser creator, String content, String creationDateTime) {
+    public ChatMessage createMessage(String sessionId, ChatMessage message) {
         checkSession(sessionId);
-        log.debug("creating message. sessionId: {} chatId: {}, creator {}, content: {}, timestamp: {}", sessionId, chatId, creator, content, creationDateTime);
-        ChatMessage message = repository.save(ServiceMapper.toMessage(chatId, creator, content, creationDateTime));
+        log.debug("creating message. sessionId: {}, message: {}", sessionId, message);
+        message = repository.save(message);
         log.debug("successfully saved message: {}. sessionId: {}", message, sessionId);
         return message;
     }

@@ -19,7 +19,7 @@ public class ChatController {
 
     public UserData createUser(String name, String password) {
         log.info("creating user with name: {}", name);
-        ChatUser created = service.createUser(name, password);
+        ChatUser created = service.createUser(ServiceMapper.toUser(name, password));
         return ServiceMapper.toUserDto(created);
     }
 
@@ -38,14 +38,14 @@ public class ChatController {
     public ChatData createChat(String sessionId, CreateChatRq rq) {
         log.info("{}: creating chat. name: {}; creatorId: {}; users: {}", sessionId, rq.name(), rq.creatorId(), rq.userIds());
         List<ChatUser> users = rq.userIds().stream().map(id -> service.getUser(sessionId, id)).toList();
-        Chat chat = service.createChat(sessionId, rq.name(), rq.creatorId(), users);
+        Chat chat = service.createChat(sessionId, ServiceMapper.toChat(rq.name(), rq.creatorId(), users));
         return ServiceMapper.toChatDto(chat);
     }
 
     public MessageData createMessage(String sessionId, CreateMessageRq rq) {
         log.info("{}: creating message. chatId: {}, content: {}", sessionId, rq.chatId(), rq.content());
         ChatUser creator = service.getUser(sessionId, rq.creatorId());
-        ChatMessage message = service.createMessage(sessionId, rq.chatId(), creator, rq.content(), rq.creationDateTime());
+        ChatMessage message = service.createMessage(sessionId, ServiceMapper.toMessage(rq.chatId(), creator, rq.content(), rq.creationDateTime()));
         return ServiceMapper.toMessageDto(message);
     }
 
