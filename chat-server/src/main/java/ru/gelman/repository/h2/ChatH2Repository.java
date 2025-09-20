@@ -4,10 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
 import ru.gelman.entity.*;
 import ru.gelman.mapper.JdbcRepositoryMapper;
+import ru.gelman.mapper.ServiceMapper;
 import ru.gelman.repository.ChatRepository;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 @Slf4j
@@ -226,7 +229,7 @@ public class ChatH2Repository implements ChatRepository {
             PreparedStatement saveMessageQuery = connection.prepareStatement(getQuery("insert_message"), Statement.RETURN_GENERATED_KEYS);
             saveMessageQuery.setString(1, message.getContent());
             saveMessageQuery.setObject(2, message.getCreationDateTime());
-            saveMessageQuery.setInt(3, message.getCreatorId());
+            saveMessageQuery.setInt(3, message.getCreator().getId());
             saveMessageQuery.setInt(4, message.getChatId());
 
             log.debug("executing insert request");
@@ -289,7 +292,7 @@ public class ChatH2Repository implements ChatRepository {
 
             ChatUser user = getUser(rs.getInt("userId"));
             LocalDateTime expired = rs.getObject("expiredDate", LocalDateTime.class);
-            ChatSession session = ChatEntityFactory.existingSession(sessionId, user, expired);
+            ChatSession session = ServiceMapper.toSession(sessionId, user, expired);
             log.debug("found session: {}", session);
             return session;
         } catch (SQLException e) {
@@ -313,6 +316,126 @@ public class ChatH2Repository implements ChatRepository {
             }
         } catch (SQLException e) {
             log.error("Database error occurred while updating session: {}", session);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<ChatSession> getSessionsBefore(LocalDateTime timestamp) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement selectSessionsQuery = connection.prepareStatement(getQuery("select_sessions_before"));
+            selectSessionsQuery.setTimestamp(1, Timestamp.valueOf(timestamp));
+
+            log.debug("executing select sessions query with expired date before: {}", timestamp);
+            ResultSet sessionsRs = selectSessionsQuery.executeQuery();
+            List<ChatSession> sessions = new ArrayList<>();
+            while (sessionsRs.next()) {
+                String sessionId = sessionsRs.getString("sessionId");
+                ChatUser user = getUser(sessionsRs.getInt("userId"));
+                LocalDateTime expiredDate = sessionsRs.getObject("expiredDate", LocalDateTime.class);
+                ChatSession session = ServiceMapper.toSession(sessionId, user, expiredDate);
+
+                log.debug("adding session {} to list", session);
+                sessions.add(session);
+            }
+            log.debug("successfully get {} sessions from database", sessions.size());
+            return sessions;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting sessions with expired date before: {}", timestamp);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<ChatInfo> getUserChatsInfo(ChatUser user) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement selectChatInfoQuery = connection.prepareStatement(getQuery("select_user_chats_info"));
+            selectChatInfoQuery.setInt(1, user.getId());
+
+            log.debug("executing select chats info for user: {}", user);
+            ResultSet chatInfosRs = selectChatInfoQuery.executeQuery();
+            List<ChatInfo> chatInfos = new ArrayList<>();
+            while (chatInfosRs.next()) {
+                ChatInfo info = JdbcRepositoryMapper.toChatInfoEntity(chatInfosRs);
+                log.debug("adding info {} to list", info);
+                chatInfos.add(info);
+            }
+            log.debug("successfully get {} chat infos from database", chatInfos.size());
+            return chatInfos;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting chat infos with for user: {}", user);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<ChatMessage> getLastMessages(ChatInfo chat, int messagesLimit) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement selectMessagesQuery = connection.prepareStatement(getQuery("select_last_n_chat_messages"));
+            selectMessagesQuery.setInt(1, chat.getId());
+            selectMessagesQuery.setInt(2, messagesLimit);
+
+            log.debug("executing select messages for chat: {}", chat);
+            ResultSet messagesRs = selectMessagesQuery.executeQuery();
+            List<ChatMessage> messages = new ArrayList<>();
+            while (messagesRs.next()) {
+                int id = messagesRs.getInt("id");
+                ChatUser creator = getUser(messagesRs.getInt("creatorId"));
+                int chatId = messagesRs.getInt("chatId");
+                String content = messagesRs.getString("content");
+                LocalDateTime creationDateTime = messagesRs.getObject("creationDateTime", LocalDateTime.class);
+                boolean deleted = messagesRs.getBoolean("deleted");
+                ChatMessage message = ServiceMapper.toMessage(id, chatId, creator, content, creationDateTime, deleted);
+
+                log.debug("adding message: {} to list", message);
+                messages.add(message);
+            }
+            log.debug("successfully get {} messages from database", messages.size());
+            return messages;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting messages for chat: {}", chat);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ChatInfo getChatInfo(int chatId) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement getChatInfoQuery = connection.prepareStatement(getQuery("select_chat_info"));
+            getChatInfoQuery.setInt(1, chatId);
+            log.debug("executing select chat info query. id: {}", chatId);
+            ResultSet rs = getChatInfoQuery.executeQuery();
+            if (!rs.next()) {
+                log.warn("chat with id {} not found:", chatId);
+                throw new RuntimeException("chat not found");
+            }
+            ChatInfo chatInfo = JdbcRepositoryMapper.toChatInfoEntity(rs);
+            log.debug("found chat: {}", chatInfo);
+            return chatInfo;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting chat info by id: {}", chatId);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<ChatUser> getChatUsers(ChatInfo chat) {
+        try (Connection connection = getConnection()) {
+            PreparedStatement selectChatUsersQuery = connection.prepareStatement(getQuery("select_chat_users"));
+            selectChatUsersQuery.setInt(1, chat.getId());
+
+            log.debug("executing select users for chat: {}", chat);
+            ResultSet usersRs = selectChatUsersQuery.executeQuery();
+            List<ChatUser> users = new ArrayList<>();
+            while (usersRs.next()) {
+                ChatUser user = JdbcRepositoryMapper.toUserEntity(usersRs);
+                log.debug("adding user {} to list", user);
+                users.add(user);
+            }
+            log.debug("successfully get {} users from database", users.size());
+            return users;
+        } catch (SQLException e) {
+            log.error("Database error occurred while selecting users for chat: {}", chat);
             throw new RuntimeException(e);
         }
     }

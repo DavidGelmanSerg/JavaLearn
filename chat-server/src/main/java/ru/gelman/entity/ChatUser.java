@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 public class ChatUser {
     @ToString.Include
     @EqualsAndHashCode.Include

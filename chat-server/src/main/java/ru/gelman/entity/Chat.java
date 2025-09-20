@@ -7,7 +7,7 @@ import java.util.List;
 @Getter
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 public class Chat implements Comparable<Chat> {
     @NonNull
     @ToString.Include

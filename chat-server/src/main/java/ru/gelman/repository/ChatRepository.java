@@ -1,10 +1,10 @@
 package ru.gelman.repository;
 
 
-import ru.gelman.entity.Chat;
-import ru.gelman.entity.ChatMessage;
-import ru.gelman.entity.ChatSession;
-import ru.gelman.entity.ChatUser;
+import ru.gelman.entity.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ChatRepository {
 
@@ -31,4 +31,14 @@ public interface ChatRepository {
     ChatSession getSession(String sessionId);
 
     void updateSessionExpiredDate(ChatSession session);
+
+    List<ChatSession> getSessionsBefore(LocalDateTime timestamp);
+
+    List<ChatInfo> getUserChatsInfo(ChatUser user);
+
+    List<ChatMessage> getLastMessages(ChatInfo chat, int messagesLimit);
+
+    ChatInfo getChatInfo(int chatId);
+
+    List<ChatUser> getChatUsers(ChatInfo chat);
 }

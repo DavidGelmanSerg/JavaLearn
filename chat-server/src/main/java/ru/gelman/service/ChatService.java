@@ -3,6 +3,7 @@ package ru.gelman.service;
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.PropertyLoader;
 import ru.gelman.entity.*;
+import ru.gelman.mapper.ServiceMapper;
 import ru.gelman.repository.ChatRepository;
 import ru.gelman.service.exception.LoginFailedException;
 import ru.gelman.service.exception.SessionInactiveException;
@@ -35,7 +36,7 @@ public class ChatService {
     }
 
     public ChatUser createUser(String name, String password) {
-        ChatUser user = ChatEntityFactory.newUser(name, password);
+        ChatUser user = ServiceMapper.toUser(name, password);
         if (repository.has(user)) {
             log.warn("user with name {} already exists", name);
             throw new UserAlreadyExistsException(user);
@@ -67,7 +68,7 @@ public class ChatService {
 
         TimeUnit sessionTimeLiveUnit = TimeUnit.valueOf(SERVICE_CONFIG.getProperty("session_time_units"));
         int sessionTimeLive = Integer.parseInt(SERVICE_CONFIG.getProperty("session_time_live"));
-        ChatSession session = ChatEntityFactory.newSession(sessionId, user, sessionTimeLive, sessionTimeLiveUnit);
+        ChatSession session = ServiceMapper.toSession(sessionId, user, sessionTimeLive, sessionTimeLiveUnit);
         repository.save(session);
         log.debug("successfully created session: {}", session);
         return session;
@@ -76,15 +77,15 @@ public class ChatService {
     public Chat createChat(String sessionId, String name, int creatorId, List<ChatUser> users) {
         checkSession(sessionId);
         log.debug("{}: creating chat. name: {}; creating by: {} users: {}", sessionId, name, creatorId, users);
-        Chat chat = repository.save(ChatEntityFactory.newChat(name, creatorId, users));
+        Chat chat = repository.save(ServiceMapper.toChat(name, creatorId, users));
         log.debug("{}: successfully saved chat: {}", sessionId, chat);
         return chat;
     }
 
-    public ChatMessage createMessage(String sessionId, int chatId, int creatorId, String content, String creationDateTime) {
+    public ChatMessage createMessage(String sessionId, int chatId, ChatUser creator, String content, String creationDateTime) {
         checkSession(sessionId);
-        log.debug("{} creating message. chatId: {}, creatorId {}, content: {}, timestamp: {}", sessionId, chatId, creatorId, content, creationDateTime);
-        ChatMessage message = repository.save(ChatEntityFactory.newMessage(chatId, creatorId, content, creationDateTime));
+        log.debug("{} creating message. chatId: {}, creator {}, content: {}, timestamp: {}", sessionId, chatId, creator, content, creationDateTime);
+        ChatMessage message = repository.save(ServiceMapper.toMessage(chatId, creator, content, creationDateTime));
         log.debug("{}: successfully saved message: {}", sessionId, message);
         return message;
     }
@@ -105,5 +106,35 @@ public class ChatService {
 
     public ChatSession getSession(String sessionId) {
         return repository.getSession(sessionId);
+    }
+
+    public List<ChatSession> getActiveSessions() {
+        LocalDateTime now = LocalDateTime.now();
+        return repository.getSessionsBefore(now);
+    }
+
+    public List<ChatInfo> getUserChatsInfo(String sessionId, ChatUser user) {
+        checkSession(sessionId);
+        log.debug("getting chats for user: {}", user);
+        return repository.getUserChatsInfo(user);
+    }
+
+    public List<ChatMessage> getChatMessages(String sessionId, ChatInfo chat) {
+        checkSession(sessionId);
+        log.debug("getting messages for chat: {}", chat);
+        int messagesLimit = Integer.parseInt(SERVICE_CONFIG.getProperty("message_limit"));
+        return repository.getLastMessages(chat, messagesLimit);
+    }
+
+    public ChatInfo getChatInfo(String sessionId, int chatId) {
+        checkSession(sessionId);
+        log.debug("getting chat info for chat with id: {}", chatId);
+        return repository.getChatInfo(chatId);
+    }
+
+    public List<ChatUser> getChatUsers(String sessionId, ChatInfo chat) {
+        checkSession(sessionId);
+        log.debug("getting users for chat: {}", chat);
+        return repository.getChatUsers(chat);
     }
 }

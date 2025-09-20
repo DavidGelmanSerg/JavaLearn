@@ -3,7 +3,7 @@ package ru.gelman.entity;
 import lombok.*;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ChatInfo {

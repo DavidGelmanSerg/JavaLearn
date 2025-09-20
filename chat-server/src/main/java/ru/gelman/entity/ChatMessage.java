@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 @Getter
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 public class ChatMessage implements Comparable<ChatMessage> {
     @ToString.Include
     private final int chatId;
     @ToString.Include
-    private final Integer creatorId;
+    private final ChatUser creator;
     @NonNull
     private final LocalDateTime creationDateTime;
     @Setter

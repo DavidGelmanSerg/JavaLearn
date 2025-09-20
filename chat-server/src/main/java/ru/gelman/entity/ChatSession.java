@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 public class ChatSession {
     @EqualsAndHashCode.Include
     private final String sessionId;
