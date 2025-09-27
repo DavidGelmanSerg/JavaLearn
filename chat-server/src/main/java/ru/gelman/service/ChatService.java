@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ChatService {
-    private static final Properties SERVICE_CONFIG = PropertyLoader.load("service_config.properties");
+    private static final Properties SERVICE_CONFIG = PropertyLoader.load("/service_config.properties");
     private final ChatRepository repository;
 
     public ChatService(ChatRepository repository) {
@@ -55,14 +55,14 @@ public class ChatService {
         return repository.getUser(id);
     }
 
-    public ChatSession login(String name, String password) {
-        log.debug("login user: {}", name);
-        if (!repository.login(name, password)) {
+    public ChatSession login(ChatUser user) {
+        log.debug("login user: {}", user.getName());
+        if (!repository.login(user)) {
             log.warn("login failed. Invalid username or password");
             throw new LoginFailedException();
         }
-        log.debug("login successful. creating session for user: {}", name);
-        ChatUser user = repository.getUser(name);
+        log.debug("login successful. creating session for user: {}", user.getName());
+        user = repository.getUser(user.getName());
         String sessionId = UUID.randomUUID().toString();
 
         TimeUnit sessionTimeLiveUnit = TimeUnit.valueOf(SERVICE_CONFIG.getProperty("session_time_units"));
@@ -99,7 +99,7 @@ public class ChatService {
 
         log.debug("updating session expire date. old value: {}; new value: {}", session.getExpiredDate(), expiredDate);
         session.setExpiredDate(expiredDate);
-        repository.save(session);
+        repository.updateSessionExpiredDate(session);
         log.debug("successfully updated session: {}", session);
     }
 
@@ -111,7 +111,7 @@ public class ChatService {
     public List<ChatSession> getActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
         log.debug("getting active sessions. current timestamp: {}", now);
-        return repository.getSessionsBefore(now);
+        return repository.getSessionsAfter(now);
     }
 
     public List<ChatInfo> getUserChatsInfo(String sessionId, ChatUser user) {

@@ -18,7 +18,7 @@ public interface ChatRepository {
 
     ChatUser getUser(int id);
 
-    boolean login(String name, String password);
+    boolean login(ChatUser user);
 
     boolean hasUser(String name);
 
@@ -32,7 +32,7 @@ public interface ChatRepository {
 
     void updateSessionExpiredDate(ChatSession session);
 
-    List<ChatSession> getSessionsBefore(LocalDateTime timestamp);
+    List<ChatSession> getSessionsAfter(LocalDateTime timestamp);
 
     List<ChatInfo> getUserChatsInfo(ChatUser user);
 

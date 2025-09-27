@@ -15,14 +15,14 @@ import java.util.Properties;
 
 @Slf4j
 public class ChatH2Repository implements ChatRepository {
-    private static final Properties QUERIES = PropertyLoader.load("query.properties");
+    private static final Properties QUERIES = PropertyLoader.load("/query.properties");
     private final String url;
     private final String login;
     private final String password;
 
     public ChatH2Repository() {
         log.debug("initializing h2 database");
-        Properties config = PropertyLoader.load("db_config.properties");
+        Properties config = PropertyLoader.load("/db_config.properties");
         url = config.getProperty("url", "");
         login = config.getProperty("login", "");
         password = config.getProperty("password", "");
@@ -32,10 +32,6 @@ public class ChatH2Repository implements ChatRepository {
             log.debug("executing query: {}", createUsersTableQuery);
             statement.executeUpdate(createUsersTableQuery);
 
-            String createMessagesTableQuery = getQuery("create_messages_table");
-            log.debug("executing query: {}", createMessagesTableQuery);
-            statement.executeUpdate(createMessagesTableQuery);
-
             String createChatsTableQuery = getQuery("create_chats_table");
             log.debug("executing query: {}", createChatsTableQuery);
             statement.executeUpdate(createChatsTableQuery);
@@ -43,6 +39,10 @@ public class ChatH2Repository implements ChatRepository {
             String createChatsUsersTableQuery = getQuery("create_users_chats_table");
             log.debug("executing query: {}", createChatsUsersTableQuery);
             statement.executeUpdate(createChatsUsersTableQuery);
+
+            String createMessagesTableQuery = getQuery("create_messages_table");
+            log.debug("executing query: {}", createMessagesTableQuery);
+            statement.executeUpdate(createMessagesTableQuery);
 
             String createSessionsTableQuery = getQuery("create_sessions_table");
             log.debug("executing query: {}", createSessionsTableQuery);
@@ -92,8 +92,9 @@ public class ChatH2Repository implements ChatRepository {
         try (Connection connection = getConnection()) {
             PreparedStatement saveUserQuery = connection.prepareStatement(getQuery("insert_user"),
                     Statement.RETURN_GENERATED_KEYS);
-            saveUserQuery.setString(2, user.getName());
-            saveUserQuery.setString(3, user.getPassword());
+            saveUserQuery.setString(1, user.getName());
+            saveUserQuery.setString(2, user.getPassword());
+            saveUserQuery.setBoolean(3, user.isDeleted());
 
             log.debug("insert user {} to database", user);
             if (saveUserQuery.executeUpdate() > 0) {
@@ -144,20 +145,20 @@ public class ChatH2Repository implements ChatRepository {
     }
 
     @Override
-    public boolean login(String name, String password) {
+    public boolean login(ChatUser user) {
         try (Connection connection = getConnection()) {
             PreparedStatement loginQuery = connection.prepareStatement(getQuery("select_user_login"));
-            loginQuery.setString(1, name);
-            loginQuery.setString(2, password);
-            log.debug("executing login user query. name: {}", name);
+            loginQuery.setString(1, user.getName());
+            loginQuery.setString(2, user.getPassword());
+            log.debug("executing login user query. name: {}", user.getName());
             ResultSet rs = loginQuery.executeQuery();
 
             boolean result = rs.next() && rs.getInt(1) > 0;
             log.debug("execution result: {}", result);
             return result;
         } catch (SQLException e) {
-            log.error("database error occurred while login user: {}", name);
-            throw new RuntimeException(e);
+            log.error("database error occurred while login user: {}", user.getPassword());
+            return false;
         }
     }
 
@@ -306,9 +307,9 @@ public class ChatH2Repository implements ChatRepository {
     }
 
     @Override
-    public List<ChatSession> getSessionsBefore(LocalDateTime timestamp) {
+    public List<ChatSession> getSessionsAfter(LocalDateTime timestamp) {
         try (Connection connection = getConnection()) {
-            PreparedStatement selectSessionsQuery = connection.prepareStatement(getQuery("select_sessions_before"));
+            PreparedStatement selectSessionsQuery = connection.prepareStatement(getQuery("select_sessions_after"));
             selectSessionsQuery.setTimestamp(1, Timestamp.valueOf(timestamp));
 
             log.debug("executing select sessions query with expired date before: {}", timestamp);

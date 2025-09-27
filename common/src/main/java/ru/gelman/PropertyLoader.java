@@ -13,7 +13,7 @@ public class PropertyLoader {
                 properties.load(in);
                 return properties;
             }
-            throw new RuntimeException("Property file not found");
+            throw new RuntimeException("Property file \"" + path + "\" not found");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

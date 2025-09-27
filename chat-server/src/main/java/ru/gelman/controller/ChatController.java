@@ -25,7 +25,8 @@ public class ChatController {
 
     public SessionData login(String name, String password) {
         log.info("login user with name: {}", name);
-        ChatSession session = service.login(name, password);
+        ChatUser user = ServiceMapper.toUser(name, password);
+        ChatSession session = service.login(user);
         return ServiceMapper.toSessionDto(session);
     }
 
