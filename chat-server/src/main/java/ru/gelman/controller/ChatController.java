@@ -83,4 +83,15 @@ public class ChatController {
         List<ChatUser> users = service.getChatUsers(sessionId, chat);
         return users.stream().map(ServiceMapper::toUserDto).collect(Collectors.toList());
     }
+
+    public List<SessionData> getActiveSessionsForChat(String sessionId, int id) {
+        log.info("getting active sessions for chat with id: {}", id);
+        ChatInfo chat = service.getChatInfo(sessionId, id);
+        List<ChatUser> users = service.getChatUsers(sessionId, chat);
+        List<ChatSession> sessions = service.getActiveSessions();
+        return sessions.stream()
+                .filter(session -> users.contains(session.getUser()))
+                .map(ServiceMapper::toSessionDto)
+                .collect(Collectors.toList());
+    }
 }

@@ -1,0 +1,11 @@
+package ru.gelman.core.response.sender;
+
+import ru.gelman.core.request.ChatRequestContext;
+import ru.gelman.core.response.ChatResponse;
+
+public class InitiatorSender implements ChatResponseSender {
+    @Override
+    public void send(ChatRequestContext context, ChatResponse response) {
+        context.getClient().accept(response);
+    }
+}
