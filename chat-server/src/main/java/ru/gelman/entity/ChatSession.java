@@ -1,17 +1,18 @@
 package ru.gelman.entity;
 
-import lombok.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@ToString
-@Getter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor
+@Data
 public class ChatSession {
-    @EqualsAndHashCode.Include
     private final String sessionId;
     private final ChatUser user;
-    @Setter
     private LocalDateTime expiredDate;
+
+    public static ChatSession from(String sessionId, ChatUser user, LocalDateTime expiredDate) {
+        ChatSession session = new ChatSession(sessionId, user);
+        session.setExpiredDate(expiredDate);
+        return session;
+    }
 }

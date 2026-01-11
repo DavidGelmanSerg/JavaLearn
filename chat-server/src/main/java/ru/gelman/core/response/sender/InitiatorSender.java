@@ -1,11 +1,11 @@
 package ru.gelman.core.response.sender;
 
 import ru.gelman.core.request.ChatRequestContext;
-import ru.gelman.core.response.ChatResponse;
+import ru.gelman.network.data.NetMessage;
 
 public class InitiatorSender implements ChatResponseSender {
     @Override
-    public void send(ChatRequestContext context, ChatResponse response) {
-        context.getClient().accept(response);
+    public void send(ChatRequestContext context, NetMessage response) {
+        context.getClient().sendMessage(response);
     }
 }

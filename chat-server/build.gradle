@@ -1,28 +1,73 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.liquibase:liquibase-core:4.31.1'
+    }
+}
 plugins {
     id 'java'
+    id 'org.liquibase.gradle' version '2.2.0'
 }
 
 group = 'org.example'
 version = '1.0'
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.9.2')
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.20.0")
-    testImplementation("org.mockito:mockito-core:5.14.2")
-    testImplementation("org.assertj:assertj-core:3.11.1")
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.12.4'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.15.0'
-    implementation group: 'com.h2database', name: 'h2', version: '2.2.220'
-    implementation(project(":common"))
+
+    implementation project(':common')
+    implementation 'com.h2database:h2:2.2.224'
+
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.31.1'
+    liquibaseRuntime 'info.picocli:picocli:4.6.1'
+    liquibaseRuntime 'com.h2database:h2:2.2.224'
+
+    testImplementation platform('org.junit:junit-bom:5.9.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+    testImplementation 'org.assertj:assertj-core:3.11.1'
 }
 
+liquibase {
+    activities {
+        deploy {
+            changeLogFile "/src/main/resources/db/changelog/db.changelog-master.xml"
+            url "jdbc:h2:file:~/chat/test"
+            username 'sa'
+            driver 'org.h2.Driver'
+            jvmArgs = ["-Duser.dir=${project.projectDir}"]
+        }
+    }
+    runList = 'deploy'
+}
+
+application {
+    run{
+        mainClass='ru.gelman.ChatServerApplication'
+        dependsOn update
+    }
+}
+jar.dependsOn update
+
+build{
+    dependsOn update
+}
 test {
     useJUnitPlatform()
 }

@@ -4,4 +4,5 @@ include 'sapper'
 include 'producer-consumer'
 include 'common'
 include 'chat-server'
+include 'chat-client'
 

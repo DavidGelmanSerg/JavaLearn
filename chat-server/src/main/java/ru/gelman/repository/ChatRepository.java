@@ -1,44 +1,24 @@
 package ru.gelman.repository;
 
 
-import ru.gelman.entity.*;
+import ru.gelman.entity.chat.ChatInfo;
+import ru.gelman.entity.ChatUser;
+import ru.gelman.entity.chat.Chat;
+import ru.gelman.entity.message.ChatMessage;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ChatRepository {
 
-    boolean has(ChatUser user);
-
-    boolean hasUser(int id);
-
-    ChatUser save(ChatUser user);
-
-    ChatUser getUser(String name);
-
-    ChatUser getUser(int id);
-
-    boolean login(ChatUser user);
-
-    boolean hasUser(String name);
-
     Chat save(Chat chat);
-
-    ChatMessage save(ChatMessage message);
-
-    void save(ChatSession session);
-
-    ChatSession getSession(String sessionId);
-
-    void updateSessionExpiredDate(ChatSession session);
-
-    List<ChatSession> getSessionsAfter(LocalDateTime timestamp);
 
     List<ChatInfo> getUserChatsInfo(ChatUser user);
 
-    List<ChatMessage> getLastMessages(ChatInfo chat, int messagesLimit);
-
     ChatInfo getChatInfo(int chatId);
 
-    List<ChatUser> getChatUsers(ChatInfo chat);
+    List<ChatUser> getChatUsers(int chatId);
+
+    ChatMessage save(ChatMessage message);
+
+    List<ChatMessage> getLastMessages(int chatId, int messagesLimit);
 }

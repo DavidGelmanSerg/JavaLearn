@@ -1,29 +1,30 @@
-package ru.gelman.core.client;
+package ru.gelman.core;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.gelman.network.client.Client;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class TcpClientManager {
-    private final Map<String, TcpClient> sessions;
+public class ClientManager {
+    private final Map<String, Client> sessions;
 
-    public TcpClientManager() {
+    public ClientManager() {
         sessions = new ConcurrentHashMap<>();
     }
 
-    public TcpClient getClient(String sessionId) {
+    public Client getClient(String sessionId) {
         return sessions.get(sessionId);
     }
 
-    public void setSession(String sessionId, TcpClient client) {
+    public void setSession(String sessionId, Client client) {
         if (!hasClient(client) && !hasSession(sessionId)) {
             sessions.put(sessionId, client);
         }
     }
 
-    public boolean hasClient(TcpClient client) {
+    public boolean hasClient(Client client) {
         return sessions.containsValue(client);
     }
 

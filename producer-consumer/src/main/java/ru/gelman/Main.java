@@ -2,8 +2,8 @@ package ru.gelman;
 
 import ru.gelman.consumer.MessageConsumer;
 import ru.gelman.producer.MessageProducer;
-import ru.gelman.store.MessageStore;
-import ru.gelman.store.SynchronizedMessageStore;
+import ru.gelman.message.MessageStore;
+import ru.gelman.message.SynchronizedMessageStore;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,97 +1,74 @@
 package ru.gelman.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.dto.*;
-import ru.gelman.entity.*;
-import ru.gelman.mapper.ServiceMapper;
+import ru.gelman.entity.ChatUser;
+import ru.gelman.entity.chat.Chat;
+import ru.gelman.entity.chat.ChatInfo;
+import ru.gelman.entity.message.ChatMessage;
+import ru.gelman.mapper.ChatMapper;
+import ru.gelman.mapper.MessageMapper;
+import ru.gelman.mapper.UserMapper;
 import ru.gelman.service.ChatService;
+import ru.gelman.service.SessionService;
+import ru.gelman.service.UserService;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@AllArgsConstructor
 public class ChatController {
-    private final ChatService service;
-
-    public ChatController(ChatService service) {
-        this.service = service;
-    }
-
-    public UserData createUser(String name, String password) {
-        log.info("creating user with name: {}", name);
-        ChatUser created = service.createUser(ServiceMapper.toUser(name, password));
-        return ServiceMapper.toUserDto(created);
-    }
-
-    public SessionData login(String name, String password) {
-        log.info("login user with name: {}", name);
-        ChatUser user = ServiceMapper.toUser(name, password);
-        ChatSession session = service.login(user);
-        return ServiceMapper.toSessionDto(session);
-    }
-
-    public UserData getUser(String sessionId, int id) {
-        log.info("{}: getting user by id: {}", sessionId, id);
-        ChatUser user = service.getUser(sessionId, id);
-        return ServiceMapper.toUserDto(user);
-    }
+    private final ChatService chatService;
+    private final UserService userService;
+    private final SessionService sessionService;
+    private final ChatMapper chatMapper;
+    private final MessageMapper messageMapper;
+    private final UserMapper userMapper;
 
     public ChatData createChat(String sessionId, CreateChatRq rq) {
+        sessionService.checkSession(sessionId);
         log.info("{}: creating chat. name: {}; creatorId: {}; users: {}", sessionId, rq.name(), rq.creatorId(), rq.userIds());
-        List<ChatUser> users = rq.userIds().stream().map(id -> service.getUser(sessionId, id)).toList();
-        Chat chat = service.createChat(sessionId, ServiceMapper.toChat(rq.name(), rq.creatorId(), users));
-        return ServiceMapper.toChatDto(chat);
+        List<ChatUser> users = rq.userIds().stream().map(userService::getUser).toList();
+        ChatUser creator = userService.getUser(rq.creatorId());
+        Chat chat = chatService.createChat(rq.name(), creator, users);
+        return chatMapper.toChatDto(chat);
     }
 
     public MessageData createMessage(String sessionId, CreateMessageRq rq) {
+        sessionService.checkSession(sessionId);
         log.info("{}: creating message. chatId: {}, content: {}", sessionId, rq.chatId(), rq.content());
-        ChatUser creator = service.getUser(sessionId, rq.creatorId());
-        ChatMessage message = service.createMessage(sessionId, ServiceMapper.toMessage(rq.chatId(), creator, rq.content(), rq.creationDateTime()));
-        return ServiceMapper.toMessageDto(message);
+        ChatUser creator = userService.getUser(rq.creatorId());
+        LocalDateTime creationDateTime = LocalDateTime.parse(rq.creationDateTime(), DateTimeFormatter.ISO_DATE_TIME);
+        ChatMessage message = chatService.createMessage(rq.chatId(), creator, rq.content(), creationDateTime);
+        return messageMapper.toMessageDto(message);
     }
 
-    public SessionData activateSession(String sessionId) {
-        log.info("activating session. sessionId: {}", sessionId);
-        service.activateSession(sessionId);
-        ChatSession session = service.getSession(sessionId);
-        return ServiceMapper.toSessionDto(session);
-    }
-
-    public List<SessionData> getActiveSessions() {
-        log.info("getting all active sessions");
-        List<ChatSession> sessions = service.getActiveSessions();
-        return sessions.stream().map(ServiceMapper::toSessionDto).collect(Collectors.toList());
-    }
 
     public List<ChatInfoData> getUserChatInfos(String sessionId, int id) {
+        sessionService.checkSession(sessionId);
         log.info("getting chat infos for user with id: {}", id);
-        ChatUser user = service.getUser(sessionId, id);
-        List<ChatInfo> chatInfos = service.getUserChatsInfo(sessionId, user);
-        return chatInfos.stream().map(ServiceMapper::toChatInfoDto).collect(Collectors.toList());
+        ChatUser user = userService.getUser(id);
+        List<ChatInfo> chatInfos = chatService.getUserChatsInfo(user);
+        return chatInfos.stream().map(chatMapper::toChatInfoDto).collect(Collectors.toList());
     }
 
     public List<MessageData> getChatMessages(String sessionId, int chatId) {
+        sessionService.checkSession(sessionId);
         log.info("getting chat messages for chat with id: {}", chatId);
-        ChatInfo chat = service.getChatInfo(sessionId, chatId);
-        List<ChatMessage> messages = service.getChatMessages(sessionId, chat);
-        return messages.stream().map(ServiceMapper::toMessageDto).collect(Collectors.toList());
+        ChatInfo chat = chatService.getChatInfo(chatId);
+        List<ChatMessage> messages = chatService.getChatMessages(chat);
+        return messages.stream().map(messageMapper::toMessageDto).collect(Collectors.toList());
     }
 
     public List<UserData> getChatUsers(String sessionId, int chatId) {
+        sessionService.checkSession(sessionId);
         log.info("getting chat users for chat with id: {}", chatId);
-        ChatInfo chat = service.getChatInfo(sessionId, chatId);
-        List<ChatUser> users = service.getChatUsers(sessionId, chat);
-        return users.stream().map(ServiceMapper::toUserDto).collect(Collectors.toList());
-    }
-
-    public List<SessionData> getActiveSessionsForChat(String sessionId, int id) {
-        log.info("getting active sessions for chat with id: {}", id);
-        ChatInfo chat = service.getChatInfo(sessionId, id);
-        List<ChatUser> users = service.getChatUsers(sessionId, chat);
-        List<ChatSession> sessions = service.getActiveSessions();
-        return sessions.stream()
-                .filter(session -> users.contains(session.getUser()))
-                .map(ServiceMapper::toSessionDto)
-                .collect(Collectors.toList());
+        ChatInfo chat = chatService.getChatInfo(chatId);
+        List<ChatUser> users = chatService.getChatUsers(chat);
+        return users.stream().map(userMapper::toUserDto).collect(Collectors.toList());
     }
 }

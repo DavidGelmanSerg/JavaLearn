@@ -1,20 +1,19 @@
 package ru.gelman.core.request;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.Builder;
 import lombok.Getter;
-import ru.gelman.core.client.TcpClient;
-import ru.gelman.core.client.TcpClientManager;
+import ru.gelman.controller.ChatController;
+import ru.gelman.controller.SessionController;
+import ru.gelman.controller.UserController;
+import ru.gelman.network.client.TcpClient;
+import ru.gelman.core.ClientManager;
 
 @Getter
+@Builder
 public class ChatRequestContext {
-    private final ChatRequest request;
     private final TcpClient client;
-    private final TcpClientManager sessionManager;
-
-    public ChatRequestContext(ChatRequest request, TcpClient client, TcpClientManager sessionManager) throws JsonProcessingException {
-        this.request = request;
-        this.client = client;
-        this.sessionManager = sessionManager;
-    }
-
+    private final ClientManager sessionManager;
+    private final ChatController chatController;
+    private final SessionController sessionController;
+    private final UserController userController;
 }
