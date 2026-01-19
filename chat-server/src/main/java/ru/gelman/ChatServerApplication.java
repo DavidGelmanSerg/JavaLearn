@@ -5,7 +5,6 @@ import org.mapstruct.factory.Mappers;
 import ru.gelman.controller.ChatController;
 import ru.gelman.controller.SessionController;
 import ru.gelman.controller.UserController;
-import ru.gelman.network.client.TcpClient;
 import ru.gelman.core.ClientManager;
 import ru.gelman.core.loader.ChatRequestHandlerLoader;
 import ru.gelman.core.request.ChatRequestContext;
@@ -15,6 +14,8 @@ import ru.gelman.mapper.ChatMapper;
 import ru.gelman.mapper.MessageMapper;
 import ru.gelman.mapper.SessionMapper;
 import ru.gelman.mapper.UserMapper;
+import ru.gelman.network.client.Client;
+import ru.gelman.network.client.TcpClient;
 import ru.gelman.repository.ChatRepository;
 import ru.gelman.repository.SessionRepository;
 import ru.gelman.repository.UserRepository;
@@ -82,8 +83,7 @@ public class ChatServerApplication {
                 try (ServerSocket server = new ServerSocket(port)) {
                     Socket clientSocket = server.accept();
                     log.info("accept socket. ip: {}, port: {}", clientSocket.getInetAddress(), clientSocket.getPort());
-                    TcpClient client = new TcpClient(clientSocket);
-
+                    Client client = new TcpClient(clientSocket);
                     ChatRequestContext context = ChatRequestContext.builder()
                             .chatController(chatController)
                             .sessionController(sessionController)

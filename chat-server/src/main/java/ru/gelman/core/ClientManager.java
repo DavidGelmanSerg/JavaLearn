@@ -3,12 +3,12 @@ package ru.gelman.core;
 import lombok.extern.slf4j.Slf4j;
 import ru.gelman.network.client.Client;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 public class ClientManager {
-    private final Map<String, Client> sessions;
+    private final ConcurrentMap<String, Client> sessions;
 
     public ClientManager() {
         sessions = new ConcurrentHashMap<>();
