@@ -24,7 +24,7 @@ public class TcpClient implements Client {
     }
 
     @Override
-    public NetMessage getResponse(NetMessage request) {
+    public synchronized NetMessage getResponse(NetMessage request) {
         sendMessage(request);
         return getMessage();
     }
