@@ -24,13 +24,13 @@ public class TcpClient implements Client {
     }
 
     @Override
-    public synchronized NetMessage getResponse(NetMessage request) {
+    public NetMessage getResponse(NetMessage request) {
         sendMessage(request);
         return getMessage();
     }
 
     @Override
-    public synchronized void sendMessage(NetMessage message) {
+    public void sendMessage(NetMessage message) {
         try {
             var out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
             String messageString = message.asStringValue();
@@ -43,7 +43,7 @@ public class TcpClient implements Client {
     }
 
     @Override
-    public synchronized NetMessage getMessage() {
+    public NetMessage getMessage() {
         try {
             var in = new Scanner(socket.getInputStream(), StandardCharsets.UTF_8);
             if (in.hasNextLine()) {
@@ -60,7 +60,7 @@ public class TcpClient implements Client {
     }
 
     @Override
-    public synchronized void setTimeout(int timeoutMillis) {
+    public void setTimeout(int timeoutMillis) {
         try {
             socket.setSoTimeout(timeoutMillis);
         } catch (SocketException e) {
@@ -69,12 +69,12 @@ public class TcpClient implements Client {
     }
 
     @Override
-    public synchronized boolean isClosed() {
+    public boolean isClosed() {
         return socket.isClosed();
     }
 
     @Override
-    public synchronized void close() throws IOException {
+    public void close() throws IOException {
         socket.close();
     }
 }
