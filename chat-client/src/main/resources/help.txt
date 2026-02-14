@@ -1,0 +1,27 @@
+Required key: -c. This key represents commandType to execute. Available commands:
+    1. -c user_create
+    2. -c user_login
+    3. -c help
+
+Other keys are data options for the command. Each command requires different keys.
+
+user_create keys:
+    1. -l : login
+    2. -p : password
+    example: -c user_create -l David -p 123
+
+user_login keys:
+    1. -l : login
+    2. -p : password
+    example: -c user_login -l David -p 123
+
+chat_create keys:
+    1. -sid : sessionId (uuid)
+    2. -cid : creatorId
+    3. -n   : name      (String)
+    4. -ul  : user_list (user ids)
+    example: -c chat_create -n TEST_CHAT -sid <id_from_user_login_command> -cid 1 -ul 1,2,3,4
+
+help command does not require any keys:
+    example: -c help
+

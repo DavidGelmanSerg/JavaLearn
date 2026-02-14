@@ -1,4 +1,4 @@
-package ru.gelman.store;
+package ru.gelman.message;
 
 import ru.gelman.Message;
 

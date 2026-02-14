@@ -1,12 +1,10 @@
-package ru.gelman.store;
-
-import ru.gelman.Message;
+package ru.gelman.message.store;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class SynchronizedMessageStore implements MessageStore {
-    private final Queue<Message> messagesQueue;
+public class SynchronizedMessageStore<T> implements MessageStore<T> {
+    private final Queue<T> messagesQueue;
     private final int capacity;
 
     public SynchronizedMessageStore(int capacity) {
@@ -15,7 +13,7 @@ public class SynchronizedMessageStore implements MessageStore {
     }
 
     @Override
-    public synchronized void put(Message message) throws InterruptedException {
+    public synchronized void put(T message) throws InterruptedException {
         while (messagesQueue.size() == capacity) {
             wait();
         }
@@ -24,7 +22,7 @@ public class SynchronizedMessageStore implements MessageStore {
     }
 
     @Override
-    public synchronized Message get() throws InterruptedException {
+    public synchronized T get() throws InterruptedException {
         while (messagesQueue.isEmpty()) {
             wait();
         }

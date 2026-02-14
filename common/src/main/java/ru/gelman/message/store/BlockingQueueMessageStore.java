@@ -1,24 +1,22 @@
-package ru.gelman.store;
-
-import ru.gelman.Message;
+package ru.gelman.message.store;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class BlockingQueueMessageStore implements MessageStore {
-    private final BlockingQueue<Message> store;
+public class BlockingQueueMessageStore<T> implements MessageStore<T> {
+    private final BlockingQueue<T> store;
 
     public BlockingQueueMessageStore(int capacity) {
         store = new LinkedBlockingQueue<>(capacity);
     }
 
     @Override
-    public void put(Message message) throws InterruptedException {
+    public void put(T message) throws InterruptedException {
         store.put(message);
     }
 
     @Override
-    public Message get() throws InterruptedException {
+    public T get() throws InterruptedException {
         return store.take();
     }
 }
